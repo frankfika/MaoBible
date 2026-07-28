@@ -3,8 +3,9 @@ import type { Article } from '@/types';
 import { getArticleMeta } from '@/data/manifest';
 
 /**
- * Fetches article content from /public/content/{id}.json with a
- * timeout-based retry. The service worker caches these for offline use.
+ * Fetches article content from /public/content/{id}.json.
+ * The fetched article's metadata is merged with the manifest's metadata
+ * (which carries `interpretation` and `situations` — not in the JSON).
  */
 export function useArticle(articleId: string | undefined) {
   const [article, setArticle] = useState<Article | null>(null);
@@ -39,16 +40,17 @@ export function useArticle(articleId: string | undefined) {
 
     fetchOnce()
       .then((a) => {
-        if (!cancelled) {
-          setArticle(a);
-          setLoading(false);
-        }
+        if (cancelled) return;
+        // Merge manifest metadata over JSON metadata so the rich
+        // interpretation/situations live alongside the article text.
+        a.metadata = { ...a.metadata, ...meta };
+        setArticle(a);
+        setLoading(false);
       })
       .catch((e) => {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'unknown error');
-          setLoading(false);
-        }
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : 'unknown error');
+        setLoading(false);
       });
 
     return () => {

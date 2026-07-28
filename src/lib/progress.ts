@@ -5,8 +5,9 @@
 export {
   getReadingProgress,
   setReadingProgress,
-  getBookmarks,
+  getBookmark,
   setBookmark,
   clearBookmark,
+  getAllBookmarks,
 } from './storage';
 export type { ReadingProgress as StoredProgress } from '@/types';

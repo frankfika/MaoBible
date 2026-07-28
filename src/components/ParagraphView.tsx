@@ -1,16 +1,9 @@
 import type { Paragraph, LangCode } from '@/types';
 
 /**
- * Simple paragraph renderer — no popover, no notes, no highlight.
- * Just typography. Used by the simplified Reader.
+ * Simple paragraph renderer — just typography. No popover, no notes.
  */
-export function ParagraphView({
-  p,
-  lang,
-}: {
-  p: Paragraph;
-  lang: LangCode;
-}) {
+export function ParagraphView({ p, lang }: { p: Paragraph; lang: LangCode }) {
   if (p.kind === 'heading') {
     return (
       <h2
@@ -28,7 +21,7 @@ export function ParagraphView({
       className={
         lang === 'zh-CN'
           ? 'para-zh text-body-lg my-4 leading-loose'
-          : 'para-en text-body-lg my-4 leading-relaxed'
+          : 'para-en text-base my-4 leading-relaxed'
       }
     >
       {p.text}

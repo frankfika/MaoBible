@@ -1,20 +1,14 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { Header } from './Header';
 
-// useTranslation referenced in BottomNav; keep the import live.
-void useTranslation;
-
 /**
- * App shell — minimal chrome: header (app name + theme toggle) + bottom tab bar.
- * Three tabs: Browse / Ask / Settings (settings is just the theme toggle area,
- * or future preferences).
+ * App shell — header + main + bottom tab bar with iOS safe-area inset.
  */
 export function AppShell() {
   return (
     <div className="min-h-dvh flex flex-col">
       <Header />
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </main>
       <BottomNav />
@@ -23,17 +17,17 @@ export function AppShell() {
 }
 
 const TABS = [
-  { to: '/', key: 'browse', label: 'Browse', icon: '📖' },
-  { to: '/ask', key: 'ask', label: 'Ask', icon: '🔍' },
-  { to: '/me', key: 'me', label: 'Me', icon: '☰' },
+  { to: '/', label: '看', icon: '📖' },
+  { to: '/ask', label: '问', icon: '🔍' },
+  { to: '/me', label: '我', icon: '☰' },
 ] as const;
 
 function BottomNav() {
-  const { t } = useTranslation();
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md bg-paper/90 dark:bg-dark-paper/90
-                 border-t border-ink/5 dark:border-dark-line"
+      className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md bg-paper/92 dark:bg-dark-paper/92
+                 border-t border-ink/8 dark:border-dark-line
+                 pb-[env(safe-area-inset-bottom)]"
     >
       <div className="max-w-3xl mx-auto h-14 grid grid-cols-3">
         {TABS.map((tab) => (
@@ -43,16 +37,16 @@ function BottomNav() {
             end={tab.to === '/'}
             className={({ isActive }) =>
               [
-                'flex flex-col items-center justify-center gap-0.5 transition-colors duration-180',
+                'flex flex-col items-center justify-center gap-0.5 transition-colors duration-180 min-h-[44px]',
                 isActive
                   ? 'text-cinnabar'
-                  : 'text-ink/60 dark:text-dark-ink/60 hover:text-ink dark:hover:text-dark-ink',
+                  : 'text-ink/55 dark:text-dark-ink/55 hover:text-ink dark:hover:text-dark-ink',
               ].join(' ')
             }
           >
             <span className="text-lg leading-none">{tab.icon}</span>
-            <span className="text-[10px] font-medium leading-none">
-              {t(`nav.${tab.key}`)}
+            <span className="text-[10px] font-medium leading-none mt-0.5">
+              {tab.label}
             </span>
           </NavLink>
         ))}

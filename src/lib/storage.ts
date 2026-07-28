@@ -1,25 +1,12 @@
 /**
- * Local storage layer — bookmarks, reading progress.
- * Persists in IndexedDB via idb-keyval. Survives reload + works offline.
+ * Local storage — bookmarks + reading progress. IndexedDB via idb-keyval.
  */
 import { get, set, del, keys } from 'idb-keyval';
 import type { Bookmark, ReadingProgress } from '@/types';
 
 const PREFIX = 'maobible:';
-
 function key(articleId: string, kind: string) {
   return `${PREFIX}${kind}:${articleId}`;
-}
-
-export async function getBookmarks(articleId?: string): Promise<Bookmark[]> {
-  if (articleId) {
-    const v = await get<Bookmark>(key(articleId, 'bookmark'));
-    return v ? [v] : [];
-  }
-  const all = await Promise.all(
-    (await keys()).map(async (k) => get<Bookmark>(k)),
-  );
-  return all.filter((x): x is Bookmark => Boolean(x));
 }
 
 export async function getBookmark(articleId: string): Promise<Bookmark | undefined> {
@@ -34,9 +21,14 @@ export async function clearBookmark(articleId: string): Promise<void> {
   await del(key(articleId, 'bookmark'));
 }
 
-export async function getReadingProgress(
-  articleId: string,
-): Promise<ReadingProgress | undefined> {
+export async function getAllBookmarks(): Promise<Bookmark[]> {
+  const all = await Promise.all(
+    (await keys()).map(async (k) => get<Bookmark>(k)),
+  );
+  return all.filter((x): x is Bookmark => Boolean(x));
+}
+
+export async function getReadingProgress(articleId: string): Promise<ReadingProgress | undefined> {
   return get<ReadingProgress>(key(articleId, 'progress'));
 }
 

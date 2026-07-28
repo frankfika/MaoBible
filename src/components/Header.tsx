@@ -1,13 +1,7 @@
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from './ThemeToggle';
 
-/**
- * Minimal header — just app name + theme toggle. No nav, no links.
- * Navigation lives in the bottom tab bar (see AppShell).
- */
 export function Header() {
-  const { t } = useTranslation();
   return (
     <header
       className="sticky top-0 z-30 backdrop-blur-md bg-paper/80 dark:bg-dark-paper/80
@@ -18,7 +12,7 @@ export function Header() {
           to="/"
           className="font-serif-cn text-base font-medium text-ink dark:text-dark-ink"
         >
-          {t('app.name')}
+          毛选
         </Link>
         <ThemeToggle />
       </div>

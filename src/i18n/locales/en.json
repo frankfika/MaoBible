@@ -1,21 +1,5 @@
 {
   "app": {
-    "name": "MaoBible",
-    "tagline": "Public-domain source, drafted translation"
-  },
-  "nav": {
-    "browse": "Browse",
-    "ask": "Ask",
-    "me": "Me"
-  },
-  "reader": {
-    "back": "Back",
-    "interpret": "Interpret",
-    "bilingual": "Bilingual",
-    "singleLang": "Single",
-    "bookmark": "Bookmark",
-    "unbookmark": "Unbookmark",
-    "prev": "Previous",
-    "next": "Next"
+    "name": "MaoBible"
   }
 }

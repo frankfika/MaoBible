@@ -1,21 +1,5 @@
 {
   "app": {
-    "name": "毛选",
-    "tagline": "原文公开，译文以公版为底"
-  },
-  "nav": {
-    "browse": "浏览",
-    "ask": "问",
-    "me": "我的"
-  },
-  "reader": {
-    "back": "返回",
-    "interpret": "解读",
-    "bilingual": "双语",
-    "singleLang": "单语",
-    "bookmark": "收藏",
-    "unbookmark": "取消收藏",
-    "prev": "上一篇",
-    "next": "下一篇"
+    "name": "毛选"
   }
 }
