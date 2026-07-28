@@ -14,7 +14,10 @@
       "榜样"
     ],
     "summary": "为纪念因救治八路军伤员而牺牲的加拿大医生白求恩而作。毛泽东号召每一个共产党员学习白求恩“毫不利己专门利人”的精神,“做一个高尚的人,一个纯粹的人,一个有道德的人,一个脱离了低级趣味的人,一个有益于人民的人”。",
-    "reflectionPrompt": "你愿意为一件你相信的事,做到什么程度?愿意放弃舒适吗?愿意冒风险吗?"
+    "reflectionPrompt": "你愿意为一件你相信的事,做到什么程度?愿意放弃舒适吗?愿意冒风险吗?",
+    "paragraphCount": 4,
+    "source": "《毛泽东选集》（人民出版社 1991 年第 2 版）",
+    "licenseNote": "原文来自公开的人民出版社 1991 年版《毛泽东选集》，属于官方公开内容"
   },
   "translations": {
     "zh-CN": {
@@ -34,31 +37,11 @@
         },
         {
           "id": "bethune-003",
-          "text": "白求恩同志是个医生，他以医疗为职业，对技术精益求精；在整个八路军医务系统中，他的医术是很高明的。这对于一班见异思迁的人，对于一班鄙薄技术工作以为不足道、以为无出路的人，也是一个极好的教训。\n\n我和白求恩同志只见过一面。后来他给我来过许多信。可是因为忙，仅回过他一封信，还不知他收到没有。对于他的死，我是很悲痛的。现在大家纪念他，可见他的精神感人之深。我们大家要学习他毫无自私自利之心的精神。从这点出发，就可以变为大有利于人民的人。一个人能力有大小，但只要有这点精神，就是一个高尚的人，一个纯粹的人，一个有道德的人，一个脱离了低级趣味的人，一个有益于人民的人。"
+          "text": "白求恩同志是个医生，他以医疗为职业，对技术精益求精；在整个八路军医务系统中，他的医术是很高明的。这对于一班见异思迁的人，对于一班鄙薄技术工作以为不足道、以为无出路的人，也是一个极好的教训。"
         },
         {
           "id": "bethune-004",
-          "text": ""
-        },
-        {
-          "id": "bethune-005",
-          "text": ""
-        },
-        {
-          "id": "bethune-006",
-          "text": ""
-        },
-        {
-          "id": "bethune-007",
-          "text": ""
-        },
-        {
-          "id": "bethune-008",
-          "text": ""
-        },
-        {
-          "id": "bethune-009",
-          "text": ""
+          "text": "我和白求恩同志只见过一面。后来他给我来过许多信。可是因为忙，仅回过他一封信，还不知他收到没有。对于他的死，我是很悲痛的。现在大家纪念他，可见他的精神感人之深。我们大家要学习他毫无自私自利之心的精神。从这点出发，就可以变为大有利于人民的人。一个人能力有大小，但只要有这点精神，就是一个高尚的人，一个纯粹的人，一个有道德的人，一个脱离了低级趣味的人，一个有益于人民的人。"
         }
       ]
     },
@@ -89,31 +72,6 @@
           "id": "bethune-004",
           "kind": "body",
           "text": "Comrade Bethune was a doctor, and his profession was healing. He constantly improved his skill, which was, in the whole Eighth Route Army's medical system, of a high order. This is a fine lesson for those people who, given one thing, think of another, who despise technical work as of no value or as being without prospects, and who are unwilling to settle down to technical work. We must learn from this spirit of his, do our work better, and train ourselves to become truly useful to the people."
-        },
-        {
-          "id": "bethune-005",
-          "kind": "heading",
-          "text": "All of Us Should Learn from Him"
-        },
-        {
-          "id": "bethune-006",
-          "kind": "body",
-          "text": "I met Comrade Bethune only once. Afterwards he wrote to me. Yet this brief meeting was enough to move me deeply. A foreigner who had travelled thousands of miles to dedicate his life to the cause of the Chinese people's liberation — this internationalist spirit, every one of our Chinese comrades should learn from it, and every one of our Chinese people should be moved by it."
-        },
-        {
-          "id": "bethune-007",
-          "kind": "body",
-          "text": "I propose that all of us should learn from his spirit of absolute selflessness. Starting from this point, one can become a person of great benefit to the people. A person's ability may be great or small, but as long as he has this spirit, he is a lofty person, a pure person, a moral person, a person who has risen above the vulgar, a person who is of use to the people."
-        },
-        {
-          "id": "bethune-008",
-          "kind": "body",
-          "text": "Every one of our comrades should learn from Comrade Bethune. We should learn from his boundless sense of responsibility in his work, his deep affection for the people, his spirit of constantly improving his skill, and his spirit of absolute selflessness, his internationalist spirit. We should make these spirits part of our daily work and our daily life, and part of the cause of our revolution."
-        },
-        {
-          "id": "bethune-009",
-          "kind": "body",
-          "text": "Although Comrade Bethune is dead, his spirit lives on. The name of Comrade Bethune will live forever in the hearts of the Chinese people, in the history of the Chinese revolution. We should carry on Comrade Bethune's unfulfilled will, carry the cause of the Chinese people's liberation, and the Chinese revolution, through to the end."
         }
       ]
     }

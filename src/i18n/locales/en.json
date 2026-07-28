@@ -1,106 +1,21 @@
 {
   "app": {
     "name": "MaoBible",
-    "tagline": "A quiet, trusted space to read and study the Selected Works of Mao Zedong in multiple languages."
+    "tagline": "Public-domain source, drafted translation"
   },
   "nav": {
-    "today": "Today",
-    "library": "Library",
-    "explore": "Explore",
-    "reader": "Reader",
-    "me": "Me",
-    "back": "Back",
-    "language": "Language",
-    "theme": "Theme"
-  },
-  "today": {
-    "daily": "Today's Passage",
-    "intro": "3-minute Guide",
-    "continue": "Continue Reading",
-    "thought": "Today's Question"
-  },
-  "library": {
-    "title": "Library",
-    "search": "Search articles, paragraphs, themes",
-    "allArticles": "All articles",
-    "byVolume": "By volume",
-    "byTheme": "By theme",
-    "empty": "No matching articles",
-    "noParagraphMatch": "No matches in article text",
-    "inArticle": "in",
-    "matchesIn": "{{count}} match",
-    "matchesIn_other": "{{count}} matches",
-    "inArticleHeader": "Matches in article text"
-  },
-  "explore": {
-    "title": "Reading Paths",
-    "intro": "Three curated paths that thread classic essays by theme.",
-    "articles": "Articles",
-    "comingSoon": "Coming soon",
-    "backToPaths": "Back to all paths",
-    "notYetAvailable": "This article is not yet available. We are preparing it.",
-    "openReader": "Open in reader"
+    "browse": "Browse",
+    "ask": "Ask",
+    "me": "Me"
   },
   "reader": {
-    "toc": "Contents",
-    "prev": "Previous",
-    "next": "Next",
-    "singleLang": "Single language",
+    "back": "Back",
+    "interpret": "Interpret",
     "bilingual": "Bilingual",
-    "highlight": "Highlight",
-    "note": "Note",
-    "explain": "Explain",
-    "languageSwitch": "Switch content language",
-    "estimatedTime": "~{{minutes}} min",
-    "by": "by",
-    "written": "Written {{date}}",
-    "themes": "Themes",
-    "keyIdeas": "Key Ideas",
-    "connections": "Related",
-    "glossary": "Glossary",
-    "saveNote": "Save",
-    "editNote": "Edit",
-    "deleteNote": "Delete",
-    "cancelNote": "Cancel",
-    "notePlaceholder": "Write your reflection or question…",
-    "noNoteYet": "No note yet — tap “Note” to start one."
-  },
-  "me": {
-    "title": "Me",
-    "bookmarks": "Bookmarks",
-    "highlights": "Highlights",
-    "notes": "Notes",
-    "history": "History",
-    "settings": "Settings",
-    "empty": "Nothing yet",
-    "appearance": "Appearance",
-    "contentLanguage": "Content language",
-    "uiLanguage": "Interface language",
-    "interface": "Interface"
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "glossary": {
-    "title": "Glossary",
-    "subtitle": "Key concepts you will meet while reading.",
-    "searchPlaceholder": "Search terms…",
-    "empty": "No matching terms"
-  },
-  "language": {
-    "ui": "Interface",
-    "content": "Content"
-  },
-  "common": {
-    "loading": "Loading…",
-    "error": "Something went wrong",
-    "retry": "Retry",
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "done": "Done"
+    "singleLang": "Single",
+    "bookmark": "Bookmark",
+    "unbookmark": "Unbookmark",
+    "prev": "Previous",
+    "next": "Next"
   }
 }

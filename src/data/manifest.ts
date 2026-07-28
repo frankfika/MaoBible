@@ -2,24 +2,41 @@
  * Article manifest — small index bundled with the app.
  * Full article content lives in /public/content/{id}.json (fetched at runtime,
  * cached by the service worker for offline access).
+ *
+ * Each article has:
+ *   - summary: 1-line description (academic)
+ *   - interpretation: 1-line "what this means today" (concrete, modern)
+ *   - situations: concrete user situations this article relates to
+ *     (for the "ask by situation" search)
  */
 import type { ArticleMetadata } from '@/types';
 
 export const ARTICLES: ArticleMetadata[] = [
-  // --- Phase 1 originals ---
   {
     id: 'hunan-peasant-movement-1927',
     title: '湖南农民运动考察报告',
-    subtitle: '1927',
+    subtitle: '一九二七年三月',
     author: '毛泽东',
     writtenAt: '1927-03',
     readingMinutes: 28,
     volume: '《毛泽东选集》第一卷',
     themes: ['调查', '群众', '组织', '革命'],
-    summary:
-      '针对党内对农民运动的责难而作的实地考察报告。毛泽东用三十二天走访湖南五县，提出「贫农是革命先锋」的判断，奠定农村调查的方法。',
-    reflectionPrompt:
-      '「没有调查就没有发言权」——你最近一次对一个陌生领域形成判断，是基于第一手材料，还是基于道听途说？',
+    summary: '针对党内对农民运动的责难而作的实地考察报告。毛泽东用三十二天走访湖南五县，提出「贫农是革命先锋」的判断，奠定农村调查的方法。',
+    interpretation: '没去现场就别下结论。三十天蹲点，比十年书斋更接近真相。',
+    situations: ['我还没调研就想下判断', '我想了解一个陌生的群体', '我的判断被现实打脸了', '怎么把一件事从抽象搞到具体'],
+  },
+  {
+    id: 'classes-analysis-1925',
+    title: '中国社会各阶级的分析',
+    subtitle: '一九二五年十二月一日',
+    author: '毛泽东',
+    writtenAt: '1925-12',
+    readingMinutes: 18,
+    volume: '《毛泽东选集》第一卷',
+    themes: ['阶级', '分析', '社会', '立场'],
+    summary: '毛泽东的开山之作。系统分析中国社会中地主、买办、中产、小资产、半无产阶级、无产阶级、游民各阶级的经济地位和政治态度。',
+    interpretation: '想看穿一个群体？先把每个人按钱和权的位置摆一遍。',
+    situations: ['我想看懂一个圈子', '对方是什么人我分不清', '谁是敌人谁是朋友我搞不清', '我想分析一个社会现象'],
   },
   {
     id: 'on-practice-1937',
@@ -30,10 +47,9 @@ export const ARTICLES: ArticleMetadata[] = [
     readingMinutes: 22,
     volume: '《毛泽东选集》第一卷',
     themes: ['实践', '认识论', '辩证法', '学习'],
-    summary:
-      '为总结中国革命经验、肃清教条主义而写的哲学论文。系统论述实践—认识—再实践的循环，确立「通过实践检验真理」的认识路线。',
-    reflectionPrompt:
-      '你最近学到的某个「道理」，有没有回到现实里被检验过？它经得住哪些具体场景？',
+    summary: '为总结中国革命经验、肃清教条主义而写的哲学论文。系统论述实践—认识—再实践的循环，确立「通过实践检验真理」的认识路线。',
+    interpretation: '学了不算懂，用了才算数。任何知识都得回到现实里走一遍。',
+    situations: ['我学的道理用不上', '我以为懂的东西其实不懂', '我做事没反馈', '怎么才算真正学到'],
   },
   {
     id: 'on-contradiction-1937',
@@ -44,289 +60,247 @@ export const ARTICLES: ArticleMetadata[] = [
     readingMinutes: 26,
     volume: '《毛泽东选集》第一卷',
     themes: ['矛盾', '辩证法', '分析', '方法'],
-    summary:
-      '与《实践论》姊妹篇。系统阐释对立统一规律，提出「矛盾普遍性」与「矛盾特殊性」的分析框架，强调具体问题具体分析。',
-    reflectionPrompt:
-      '在今天的某个具体决定里，主要矛盾和次要矛盾分别是什么？哪一边被你忽略了？',
-  },
-
-  // --- Phase 2 additions (1925–1936) ---
-  {
-    id: 'classes-analysis-1925',
-    title: '中国社会各阶级的分析',
-    subtitle: '1925',
-    author: '毛泽东',
-    writtenAt: '1925-12-01',
-    readingMinutes: 18,
-    volume: '《毛泽东选集》第一卷',
-    themes: ['阶级', '分析', '统一战线', '革命'],
-    summary:
-      '毛泽东思想的萌芽之作。系统分析中国社会中地主阶级和买办阶级、民族资产阶级、小资产阶级、半无产阶级、无产阶级五大势力的政治态度，回答「谁是我们的敌人？谁是我们的朋友？」',
-    reflectionPrompt:
-      '今天你的工作里，谁是「敌人」（消耗你注意力的事）谁是「朋友」（真正创造价值的事）？分清了吗？',
+    summary: '与《实践论》姊妹篇。系统阐释对立统一规律，提出「矛盾普遍性」与「矛盾特殊性」的分析框架，强调具体问题具体分析。',
+    interpretation: '所有事都有两面，重点是找到主要矛盾——抓住了那个，其他都跟着走。',
+    situations: ['我面前有冲突', '我不知道哪边更重要', '我想解决一个复杂问题', '事情太多分不清主次'],
   },
   {
     id: 'spark-1930',
-    title: '星星之火,可以燎原',
-    subtitle: '1930',
+    title: '星星之火，可以燎原',
+    subtitle: '一九三○年一月五日',
     author: '毛泽东',
-    writtenAt: '1930-01-05',
-    readingMinutes: 18,
+    writtenAt: '1930-01',
+    readingMinutes: 14,
     volume: '《毛泽东选集》第一卷',
-    themes: ['革命', '信心', '农村', '战略'],
-    summary:
-      '答复林彪「红旗到底打得多久」的疑问，提出「农村包围城市、武装夺取政权」的中国革命道路雏形，是毛泽东思想形成的重要标志。',
-    reflectionPrompt:
-      '你现在做的这件看似微小的事，三五年后能否「燎原」？支撑你继续做的核心信念是什么？',
+    themes: ['信心', '趋势', '小与大', '坚持'],
+    summary: '给林彪的信，回应党内「红旗到底打得多久」的悲观情绪。论证革命力量虽小但正在成长，前途必然光明。',
+    interpretation: '现在没人看好，不代表将来没人。星星之火，烧起来可以燎原。',
+    situations: ['我在做的事现在没人看好', '我想放弃了', '我看不到希望', '我做的事太小', '我是不是该坚持'],
   },
   {
     id: 'oppose-book-worship-1930',
     title: '反对本本主义',
-    subtitle: '1930',
+    subtitle: '一九三○年五月',
     author: '毛泽东',
     writtenAt: '1930-05',
     readingMinutes: 12,
     volume: '《毛泽东选集》第一卷',
-    themes: ['调查', '实事求是', '思想路线'],
-    summary:
-      '中共党内第一篇反对教条主义的文献，第一次提出「没有调查就没有发言权」，标志着党的实事求是思想路线的初步形成。',
-    reflectionPrompt:
-      '你最近一次被某条「行业共识」或「权威说法」卡住决策，是什么时候？你去验证了吗？',
+    themes: ['实事求是', '教条', '独立思考', '调查'],
+    summary: '批判党内把马克思主义教条化、照搬苏联经验的倾向。提出「没有调查就没有发言权」的著名论断。',
+    interpretation: '别照搬。别人的经验是地图，不是路线——你得自己走。',
+    situations: ['我在照搬别人的方法', '我不敢自己思考', '我想用现成的方案', '理论跟现实对不上'],
   },
   {
     id: 'masses-life-1934',
-    title: '关心群众生活,注意工作方法',
-    subtitle: '1934',
+    title: '关心群众生活，注意工作方法',
+    subtitle: '一九三四年一月二十七日',
     author: '毛泽东',
-    writtenAt: '1934-01-27',
+    writtenAt: '1934-01',
     readingMinutes: 10,
     volume: '《毛泽东选集》第一卷',
-    themes: ['群众', '工作方法', '关心'],
-    summary:
-      '在中央苏区严重困难时期写作，强调革命战争必须与群众生活问题结合起来，批评官僚主义工作方法。',
-    reflectionPrompt:
-      '你这周有没有真正了解过一个具体的人（同事/用户）今天过得怎么样，不只是看指标？',
+    themes: ['群众', '管理', '工作方法', '领导力'],
+    summary: '在江西瑞金召开的第二次全国工农兵代表大会上讲话的一部分。论述革命任务与群众生活的关系。',
+    interpretation: '想让人跟你走？先解决他们今天吃什么的问题。',
+    situations: ['我管理一个团队', '我想让别人支持我', '我的方案没人响应', '员工/用户不听话'],
   },
   {
     id: 'anti-japan-strategy-1935',
     title: '论反对日本帝国主义的策略',
-    subtitle: '1935',
+    subtitle: '一九三五年十二月二十七日',
     author: '毛泽东',
-    writtenAt: '1935-12-27',
-    readingMinutes: 16,
+    writtenAt: '1935-12',
+    readingMinutes: 20,
     volume: '《毛泽东选集》第一卷',
-    themes: ['抗日', '统一战线', '策略'],
-    summary:
-      '瓦窑堡会议讲话和结论。系统论证建立抗日民族统一战线的可能性与必要性，批评党内「左」倾关门主义。',
-    reflectionPrompt:
-      '面对一个压倒性的共同威胁，你愿意暂时放下次要分歧、扩大同盟吗？哪些分歧是真的次要？',
+    themes: ['统一战线', '策略', '敌人', '盟友'],
+    summary: '在瓦窑堡会议上的讲话。系统阐述建立抗日民族统一战线的政治路线，论证「打倒一切帝国主义」是关门主义。',
+    interpretation: '敌人比你强？找能帮你的人。多数派永远比少数派稳。',
+    situations: ['我需要找盟友', '对方比我强太多', '我想把不同的人拉到一边', '我跟谁合作'],
   },
   {
     id: 'strategy-civil-war-1936',
     title: '中国革命战争的战略问题',
-    subtitle: '1936',
+    subtitle: '一九三六年十二月',
     author: '毛泽东',
     writtenAt: '1936-12',
-    readingMinutes: 32,
+    readingMinutes: 45,
     volume: '《毛泽东选集》第一卷',
-    themes: ['战略', '军事', '认识论'],
-    summary:
-      '总结土地革命战争经验，系统论述中国革命战争的四个特点与战略战术原则，是《矛盾论》《实践论》思想在军事领域的具体化。',
-    reflectionPrompt:
-      '你当前面对的难题里，有没有「敌强我弱但敌小我大、敌退步我进步」这种结构性差异可以利用？',
+    themes: ['战略', '战术', '全局', '军事'],
+    summary: '为总结第二次国内革命战争经验而写。系统说明中国革命战争战略方面的诸问题，确立「着眼其特点和着眼其发展」的方法论。',
+    interpretation: '看不清全局的人，会把局部当整体。站在楼上和站在楼下，看到的不一样。',
+    situations: ['我做的方向对不对', '我看不清全局', '我该不该做这件事', '我想分清战略和战术'],
   },
-
-  // --- Phase 2 additions (1937–1940) ---
   {
     id: 'protracted-war-1938',
     title: '论持久战',
-    subtitle: '1938',
+    subtitle: '一九三八年五月',
     author: '毛泽东',
-    writtenAt: '1938-05-26',
-    readingMinutes: 36,
+    writtenAt: '1938-05',
+    readingMinutes: 50,
     volume: '《毛泽东选集》第二卷',
-    themes: ['战略', '持久', '抗战', '认识论'],
-    summary:
-      '抗日战争中期的总结性论文。批驳「亡国论」和「速胜论」，预见了战争将经历防御、相持、反攻三个阶段，确立「兵民是胜利之本」的核心论点。',
-    reflectionPrompt:
-      '面对一场漫长、消耗巨大的事，你如何在 6 个月内不放弃，又不在一年内精疲力竭？',
+    themes: ['持久', '战略', '信心', '节奏'],
+    summary: '驳斥「亡国论」和「速胜论」，论证抗日战争是持久战，分为战略防御、战略相持、战略反攻三个阶段。',
+    interpretation: '这是一场长跑，不是一次冲刺。撑过去的不是最强的，是不停下来的。',
+    situations: ['我想放弃了', '这是一场持久战', '我看不到胜利', '我做事没节奏', '我快撑不下去了'],
   },
   {
     id: 'party-role-1938',
     title: '中国共产党在民族战争中的地位',
-    subtitle: '1938',
+    subtitle: '一九三八年十月十四日',
     author: '毛泽东',
-    writtenAt: '1938-10-14',
-    readingMinutes: 22,
+    writtenAt: '1938-10',
+    readingMinutes: 32,
     volume: '《毛泽东选集》第二卷',
-    themes: ['党', '统一战线', '领导'],
-    summary:
-      '六届六中全会的报告与结论。系统论述党在抗日民族统一战线中的独立性、领导权问题，以及党员在民族战争中的模范作用。',
-    reflectionPrompt:
-      '加入一个更大同盟时，你如何在不丧失自身定位的前提下，为共同目标做贡献？',
+    themes: ['角色', '领导', '自我建设', '党'],
+    summary: '在中共六届六中全会上的报告节选。论述党在抗日民族战争中的地位、党员的先锋作用、党的组织建设。',
+    interpretation: '团队里你是什么人？先锋队、指挥部、还是后勤？位置决定行动。',
+    situations: ['我在团队里该扮演什么角色', '我是领导还是执行', '我应该承担什么责任'],
   },
   {
     id: 'communists-founding-1939',
     title: '《共产党人》发刊词',
-    subtitle: '1939',
+    subtitle: '一九三九年十月四日',
     author: '毛泽东',
-    writtenAt: '1939-10-04',
+    writtenAt: '1939-10',
     readingMinutes: 14,
     volume: '《毛泽东选集》第二卷',
-    themes: ['党', '三大法宝', '统一战线'],
-    summary:
-      '中共首次提出「三大法宝」（统一战线、武装斗争、党的建设）。论证马列主义理论和中国革命实践相结合，第一次把党的建设称为「伟大的工程」。',
-    reflectionPrompt:
-      '你所在的组织现在最该强化的「法宝」是哪个？制度、行动，还是自身能力？',
-  },
-  {
-    id: 'new-democracy-1940',
-    title: '新民主主义论',
-    subtitle: '1940',
-    author: '毛泽东',
-    writtenAt: '1940-01-09',
-    readingMinutes: 40,
-    volume: '《毛泽东选集》第二卷',
-    themes: ['新民主主义', '文化', '政治', '经济'],
-    summary:
-      '系统提出「新民主主义革命」理论。论证中国革命必须分两步走——新民主主义革命与社会主义革命——首次完整提出新民主主义的政治、经济、文化纲领。',
-    reflectionPrompt:
-      '一个长期目标和一个近期目标不冲突时，你怎么避免被近期目标「吸走」全部注意力？',
-  },
-
-  // --- Phase 2 additions (1942–1949) ---
-  {
-    id: 'yanan-talks-1942',
-    title: '在延安文艺座谈会上的讲话',
-    subtitle: '1942',
-    author: '毛泽东',
-    writtenAt: '1942-05-02',
-    readingMinutes: 24,
-    volume: '《毛泽东选集》第三卷',
-    themes: ['文艺', '为人民服务', '立场'],
-    summary:
-      '延安整风运动的一部分。确立「文艺为工农兵服务」的方向，区分「为什么人的问题」为根本问题、原则问题。',
-    reflectionPrompt:
-      '你做的「作品」（代码、设计、报告、邮件）服务于谁？他们的真实处境你了解多少？',
-  },
-  {
-    id: 'peoples-democratic-dictatorship-1949',
-    title: '论人民民主专政',
-    subtitle: '1949',
-    author: '毛泽东',
-    writtenAt: '1949-06-30',
-    readingMinutes: 28,
-    volume: '《毛泽东选集》第四卷',
-    themes: ['人民民主专政', '建国', '阶级'],
-    summary:
-      '为新中国奠基的理论文献。系统论述「人民民主专政」的必要性与基本任务：「对人民内部的民主方面和对反动派的专政方面，互相结合起来」。',
-    reflectionPrompt:
-      '当你的「团队」需要明确边界（谁能进，谁不能进）时，你用什么标准？',
-  },
-
-  // --- Phase 2 additions (1940–1942, 统一战线 + 整风) ---
-  {
-    id: 'united-front-tactics-1940',
-    title: '目前抗日统一战线中的策略问题',
-    subtitle: '1940',
-    author: '毛泽东',
-    writtenAt: '1940-03-11',
-    readingMinutes: 14,
-    volume: '《毛泽东选集》第二卷',
-    themes: ['统一战线', '策略', '中间派'],
-    summary:
-      '首次系统提出「发展进步势力、争取中间势力、孤立顽固势力」的策略总方针，以及对顽固派斗争的「有理、有利、有节」原则。',
-    reflectionPrompt:
-      '你能不能把合作的人分成三类——可以依靠的、要争取的、要孤立的——然后给三类分别设计不同的策略？',
-  },
-  {
-    id: 'rectify-party-style-1942',
-    title: '整顿党的作风',
-    subtitle: '1942',
-    author: '毛泽东',
-    writtenAt: '1942-02-01',
-    readingMinutes: 18,
-    volume: '《毛泽东选集》第三卷',
-    themes: ['党', '作风', '实事求是'],
-    summary:
-      '延安整风运动的开端。系统批判「主观主义、宗派主义、党八股」三种歪风，提出「实事求是」的根本态度和「惩前毖后、治病救人」的方针。',
-    reflectionPrompt:
-      '你最近学到一个理论后，有真的用它解决过现实问题吗？如果没有，你只是记住了「它」，不是学会了它。',
-  },
-  {
-    id: 'oppose-party-stereotypes-1942',
-    title: '反对党八股',
-    subtitle: '1942',
-    author: '毛泽东',
-    writtenAt: '1942-02-08',
-    readingMinutes: 12,
-    volume: '《毛泽东选集》第三卷',
-    themes: ['文风', '党八股', '方法'],
-    summary:
-      '列举党八股的八大罪状——空话连篇、装腔作势、无的放矢、语言无味、甲乙丙丁、不负责任、乱骂人等——提出「生动活泼新鲜有力」的文风标准。',
-    reflectionPrompt:
-      '你最近写的文字里，有几句是真话、几句是套话？能不能把它从「八股」里解放出来？',
+    themes: ['三大法宝', '党的建设', '经验'],
+    summary: '总结党十八年革命经验，提出战胜敌人的三大法宝：统一战线、武装斗争、党的建设。',
+    interpretation: '做事三件套：统一战线、武装斗争、党的建设。少一件都难成。',
+    situations: ['我的项目怎么才能成', '我缺什么', '我怎么把人和事捏到一起', '我做事没有抓手'],
   },
   {
     id: 'bethune-1939',
     title: '纪念白求恩',
-    subtitle: '1939',
+    subtitle: '一九三九年十二月二十一日',
     author: '毛泽东',
-    writtenAt: '1939-12-21',
+    writtenAt: '1939-12',
     readingMinutes: 8,
     volume: '《毛泽东选集》第二卷',
-    themes: ['国际主义', '为人民服务', '精神'],
-    summary:
-      '为纪念因救治八路军伤员而牺牲的加拿大医生白求恩而作。号召学习他「毫不利己专门利人」的精神，做「一个高尚的人，一个纯粹的人，一个有道德的人，一个脱离了低级趣味的人，一个有益于人民的人」。',
-    reflectionPrompt:
-      '你愿意为一件你相信的事，做到什么程度？愿意放弃舒适吗？愿意冒风险吗？',
+    themes: ['奉献', '利他', '精神', '国际主义'],
+    summary: '为悼念加拿大医生白求恩逝世而写。号召每一个共产党员学习他「毫不利己专门利人」的精神。',
+    interpretation: '为别人付出，是对自己最大的成全。',
+    situations: ['我该不该为别人付出这么多', '我做事是为自己还是为别人', '我活着是为了什么', '我想做点有意义的事'],
+  },
+  {
+    id: 'new-democracy-1940',
+    title: '新民主主义论',
+    subtitle: '一九四○年一月',
+    author: '毛泽东',
+    writtenAt: '1940-01',
+    readingMinutes: 60,
+    volume: '《毛泽东选集》第二卷',
+    themes: ['阶段', '革命', '社会', '理论'],
+    summary: '系统阐述中国革命的历史进程和未来。论证中国革命必须分两步走：新民主主义革命和社会主义革命。',
+    interpretation: '你在什么阶段？革命有节奏，跟着节奏走，逆着走会摔。',
+    situations: ['我处于什么阶段', '我下一步怎么走', '我做的事是不是太早', '我是不是太急了'],
+  },
+  {
+    id: 'united-front-tactics-1940',
+    title: '目前抗日统一战线中的策略问题',
+    subtitle: '一九四○年三月十一日',
+    author: '毛泽东',
+    writtenAt: '1940-03',
+    readingMinutes: 18,
+    volume: '《毛泽东选集》第二卷',
+    themes: ['策略', '统一战线', '合作', '斗争'],
+    summary: '针对统一战线中出现的「一切经过统一战线」的右倾错误，提出「发展进步势力、争取中间势力、孤立顽固势力」的总方针。',
+    interpretation: '和不同意见的人合作？不是让步，是把他们的力量变成你的力量。',
+    situations: ['我和不同意见的人怎么合作', '我该不该让步', '我想争取中立的人', '我内部有人反对我'],
+  },
+  {
+    id: 'yanan-talks-1942',
+    title: '在延安文艺座谈会上的讲话',
+    subtitle: '一九四二年五月',
+    author: '毛泽东',
+    writtenAt: '1942-05',
+    readingMinutes: 40,
+    volume: '《毛泽东选集》第三卷',
+    themes: ['立场', '服务', '文艺', '大众'],
+    summary: '延安文艺座谈会上的讲话。系统论述文艺为什么人服务和如何服务的问题，提出「文艺为工农兵服务」的方向。',
+    interpretation: '为谁做？先想清楚这个，否则再努力也是白费。',
+    situations: ['我做的东西为谁服务', '我应该为谁工作', '我做的事谁在意', '我想做对人有用的东西'],
+  },
+  {
+    id: 'rectify-party-style-1942',
+    title: '整顿党的作风',
+    subtitle: '一九四二年二月一日',
+    author: '毛泽东',
+    writtenAt: '1942-02',
+    readingMinutes: 24,
+    volume: '《毛泽东选集》第三卷',
+    themes: ['作风', '主观主义', '学风', '实事求是'],
+    summary: '延安整风运动的重要文献。反对主观主义、宗派主义、党八股三种不良作风，号召全党树立马克思主义作风。',
+    interpretation: '想当然是最贵的错误。事实不够，就别说。',
+    situations: ['我怎么避免想当然', '我总犯主观错误', '我做事不扎实', '我判断错了'],
+  },
+  {
+    id: 'oppose-party-stereotypes-1942',
+    title: '反对党八股',
+    subtitle: '一九四二年二月八日',
+    author: '毛泽东',
+    writtenAt: '1942-02',
+    readingMinutes: 16,
+    volume: '《毛泽东选集》第三卷',
+    themes: ['文风', '表达', '套话', '沟通'],
+    summary: '列举党八股的八大罪状，倡导生动活泼新鲜有力的马克思列宁主义文风。',
+    interpretation: '套话没人听，说人话。',
+    situations: ['我说话/写东西没人听', '我说话太官腔', '我想让人听懂', '沟通总是没效果'],
   },
   {
     id: 'serve-people-1944',
     title: '为人民服务',
-    subtitle: '1944',
+    subtitle: '一九四四年九月八日',
     author: '毛泽东',
-    writtenAt: '1944-09-08',
-    readingMinutes: 8,
+    writtenAt: '1944-09',
+    readingMinutes: 6,
     volume: '《毛泽东选集》第三卷',
-    themes: ['为人民服务', '生死', '群众'],
-    summary:
-      '在延安中央警备团追悼张思德的会上的讲演，后来成为中国共产党根本宗旨的核心表述。「为人民利益而死，就比泰山还重。」',
-    reflectionPrompt:
-      '你做的那些事，要是没人看到、没人知道、没人感谢，你还做不做？',
+    themes: ['服务', '意义', '死', '价值观'],
+    summary: '在张思德追悼会上的演讲。阐述共产党人的人生观：「为人民利益而死，就比泰山还重」。',
+    interpretation: '我做的事有意义吗？看它对别人有没有用。',
+    situations: ['我做的事有意义吗', '我活着的意义', '我想做对别人有用的事', '我做事没动力'],
   },
-
-  // --- Phase 2 additions (1945–1949) ---
   {
     id: 'postwar-situation-1945',
     title: '抗日战争胜利后的时局和我们的方针',
-    subtitle: '1945',
+    subtitle: '一九四五年八月十三日',
     author: '毛泽东',
-    writtenAt: '1945-08-13',
+    writtenAt: '1945-08',
     readingMinutes: 14,
     volume: '《毛泽东选集》第四卷',
-    themes: ['战略', '时局', '斗争'],
-    summary:
-      '抗日战争刚胜利时的关键讲演。预见到蒋介石集团必然抢夺胜利果实、发动内战，提出「针锋相对，寸土必争」的方针，要求全党对「和平」阴谋保持高度警惕。',
-    reflectionPrompt:
-      '对手刚刚从一场大战里脱身，会急着抢什么？你能在别人都松懈的时候提前想到吗？',
+    themes: ['胜利', '警惕', '斗争', '时局'],
+    summary: '抗战胜利后关于时局和党的方针的讲话。提出「针锋相对，寸土必争」的方针，告诫全党不要被「糖衣炮弹」打倒。',
+    interpretation: '刚赢了一场，不代表安全。胜利后是最危险的时候。',
+    situations: ['我刚取得胜利', '我接下来怎么走', '我该不该松口气', '我成功了反而有点慌'],
+  },
+  {
+    id: 'peoples-democratic-dictatorship-1949',
+    title: '论人民民主专政',
+    subtitle: '纪念中国共产党二十八周年',
+    author: '毛泽东',
+    writtenAt: '1949-06',
+    readingMinutes: 30,
+    volume: '《毛泽东选集》第四卷',
+    themes: ['权力', '民主', '专政', '人民'],
+    summary: '纪念中国共产党成立二十八周年的文章。系统阐述人民民主专政的理论，论述各个阶级在国家政权中的地位。',
+    interpretation: '你代表谁？为谁说话？为谁负责？这是权力的根本问题。',
+    situations: ['我代表谁', '为谁说话', '为谁负责', '我手上有权力怎么用', '我是为公还是为私'],
   },
   {
     id: 'revolution-end-1949',
     title: '将革命进行到底',
-    subtitle: '1948年12月30日,新华社献词',
+    subtitle: '一九四八年十二月三十日',
     author: '毛泽东',
-    writtenAt: '1948-12-30',
+    writtenAt: '1948-12',
     readingMinutes: 14,
     volume: '《毛泽东选集》第四卷',
-    themes: ['革命', '决心', '总结'],
-    summary:
-      '在人民解放战争取得决定性胜利时的新年献词。用古希腊「农夫与蛇」的寓言警示对反动派的仁慈就是犯罪，提出「将革命进行到底」的口号。',
-    reflectionPrompt:
-      '做对的事情在中途放弃，是不是对前面所有努力的最大浪费？',
+    themes: ['决心', '彻底', '坚持', '完成'],
+    summary: '新年献词。揭露国民党的「和平」阴谋，号召全国人民和人民解放军将革命进行到底。',
+    interpretation: '快赢了该不该停？不。要么不做，做就做到底。',
+    situations: ['我快成功了', '我该不该收手', '我已经做了 80%', '我是不是该见好就收'],
   },
 ];
 
+/** Find an article by id. Returns undefined if not found. */
 export function getArticleMeta(id: string): ArticleMetadata | undefined {
   return ARTICLES.find((a) => a.id === id);
 }

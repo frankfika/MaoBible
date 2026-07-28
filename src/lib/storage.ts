@@ -1,9 +1,9 @@
 /**
- * Local storage layer — bookmarks, highlights, notes, reading progress.
+ * Local storage layer — bookmarks, reading progress.
  * Persists in IndexedDB via idb-keyval. Survives reload + works offline.
  */
 import { get, set, del, keys } from 'idb-keyval';
-import type { Bookmark, Highlight, Note, ReadingProgress } from '@/types';
+import type { Bookmark, ReadingProgress } from '@/types';
 
 const PREFIX = 'maobible:';
 
@@ -42,23 +42,4 @@ export async function getReadingProgress(
 
 export async function setReadingProgress(p: ReadingProgress): Promise<void> {
   await set(key(p.articleId, 'progress'), p);
-}
-
-export async function getHighlights(articleId: string): Promise<Highlight[]> {
-  return (await get<Highlight[]>(key(articleId, 'highlights'))) ?? [];
-}
-
-export async function setHighlights(
-  articleId: string,
-  list: Highlight[],
-): Promise<void> {
-  await set(key(articleId, 'highlights'), list);
-}
-
-export async function getNotes(articleId: string): Promise<Note[]> {
-  return (await get<Note[]>(key(articleId, 'notes'))) ?? [];
-}
-
-export async function setNotes(articleId: string, list: Note[]): Promise<void> {
-  await set(key(articleId, 'notes'), list);
 }

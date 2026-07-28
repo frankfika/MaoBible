@@ -1,19 +1,14 @@
 /**
  * Domain types for MaoBible content.
- * Shape follows docs/product-plan.md §5 "内容数据结构":
  *
- *   Work
- *   └── Article
- *       ├── metadata
- *       ├── zh-CN
- *       │   └── paragraph-001...
- *       ├── en
- *       │   └── paragraph-001...
- *       └── annotations
+ * Article shape:
+ *   Article
+ *   ├── metadata (id, title, year, themes, summary, interpretation, situations)
+ *   ├── zh-CN (paragraphs with stable ids)
+ *   └── en     (paragraphs with stable ids)
  *
  * Each translation is an array of Paragraphs with a stable id so that
- * "段落对照" (paragraph-level bilingual mode) can align across languages
- * without re-segmenting.
+ * bilingual mode can align across languages without re-segmenting.
  */
 
 export type LangCode = 'zh-CN' | 'en';
@@ -40,7 +35,7 @@ export interface Translation {
 export interface ArticleMetadata {
   /** Stable id used in URLs */
   id: string;
-  /** Title in the original language, used as the canonical title */
+  /** Title in the original language */
   title: string;
   /** Optional short subtitle (e.g. "1937") */
   subtitle?: string;
@@ -48,16 +43,18 @@ export interface ArticleMetadata {
   author: string;
   /** Date originally written, ISO date or YYYY-MM */
   writtenAt: string;
-  /** Reading time in minutes (computed) */
+  /** Reading time in minutes */
   readingMinutes: number;
   /** Volume or collection */
   volume?: string;
-  /** Tags / themes */
+  /** Tags / themes (abstract concepts) */
   themes: string[];
-  /** Optional short summary shown on cards */
+  /** One-sentence description shown on cards */
   summary?: string;
-  /** Optional reflection prompt shown on the Today page */
-  reflectionPrompt?: string;
+  /** One-sentence modern interpretation ("what this means today") */
+  interpretation?: string;
+  /** Concrete user situations this article relates to (for "ask by situation" search) */
+  situations?: string[];
 }
 
 export interface Article {
@@ -69,7 +66,7 @@ export interface Article {
 }
 
 /**
- * User-side data model: bookmarks, highlights, notes, reading progress.
+ * User-side data: bookmark + reading progress.
  * Stored in IndexedDB via idb-keyval.
  */
 export interface Bookmark {
@@ -78,27 +75,8 @@ export interface Bookmark {
   createdAt: string;
 }
 
-export interface Highlight {
-  id: string;
-  articleId: string;
-  paragraphId: string;
-  /** Trimmed slice of paragraph text */
-  text: string;
-  createdAt: string;
-}
-
-export interface Note {
-  id: string;
-  articleId: string;
-  paragraphId: string;
-  text: string;
-  updatedAt: string;
-}
-
 export interface ReadingProgress {
   articleId: string;
-  /** Index of last paragraph read (0-based) */
-  lastParagraphIndex: number;
   /** Last scroll percentage 0..1 */
   scrollFraction: number;
   updatedAt: string;
