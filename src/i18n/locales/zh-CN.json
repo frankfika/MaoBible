@@ -6,6 +6,7 @@
   "nav": {
     "today": "今日",
     "library": "书库",
+    "explore": "专题",
     "reader": "阅读",
     "me": "我的",
     "back": "返回",
@@ -24,7 +25,20 @@
     "allArticles": "全部文章",
     "byVolume": "按卷浏览",
     "byTheme": "按主题浏览",
-    "empty": "未找到匹配的文章"
+    "empty": "未找到匹配的文章",
+    "noParagraphMatch": "未在正文中找到匹配段落",
+    "inArticle": "在",
+    "matchesIn": "{{count}} 处匹配",
+    "inArticleHeader": "在正文中的匹配"
+  },
+  "explore": {
+    "title": "阅读专题",
+    "intro": "三条策展路径,按主题串联经典篇目。",
+    "articles": "篇目",
+    "comingSoon": "敬请期待",
+    "backToPaths": "返回专题列表",
+    "notYetAvailable": "此篇目尚未上线,正在准备中。",
+    "openReader": "进入阅读"
   },
   "reader": {
     "toc": "目录",
@@ -41,7 +55,14 @@
     "written": "写于 {{date}}",
     "themes": "主题",
     "keyIdeas": "核心观点",
-    "connections": "相关文章"
+    "connections": "相关文章",
+    "glossary": "词表",
+    "saveNote": "保存",
+    "editNote": "编辑",
+    "deleteNote": "删除",
+    "cancelNote": "取消",
+    "notePlaceholder": "写下你的理解或疑问…",
+    "noNoteYet": "暂无笔记,点击“笔记”开始记录。"
   },
   "me": {
     "title": "我的",
@@ -50,12 +71,22 @@
     "notes": "笔记",
     "history": "阅读历史",
     "settings": "设置",
-    "empty": "暂无内容"
+    "empty": "暂无内容",
+    "appearance": "外观",
+    "contentLanguage": "内容语言",
+    "uiLanguage": "界面语言",
+    "interface": "界面"
   },
   "theme": {
     "light": "浅色",
     "dark": "深色",
     "system": "跟随系统"
+  },
+  "glossary": {
+    "title": "词表",
+    "subtitle": "阅读中常见的关键概念",
+    "searchPlaceholder": "搜索词条…",
+    "empty": "未找到匹配的词条"
   },
   "language": {
     "ui": "界面语言",

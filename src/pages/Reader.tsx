@@ -10,15 +10,29 @@ import {
   getBookmark,
   setBookmark as persistBookmark,
   clearBookmark,
+  getHighlights,
+  setHighlights,
+  getNotes,
+  setNotes,
 } from '@/lib/storage';
 import { ARTICLES } from '@/data/manifest';
-import type { LangCode, Paragraph } from '@/types';
+import type { Highlight, LangCode, Note, Paragraph } from '@/types';
 import { ContentLangToggle } from '@/components/ContentLangToggle';
 import { ParagraphView } from '@/components/ParagraphView';
+import { GlossaryPanel } from '@/components/GlossaryPanel';
 
 
 
 type BilingualMode = 'single' | 'bilingual';
+
+/** Lightweight unique-id generator. crypto.randomUUID is widely available,
+ *  but we fall back gracefully for older browsers. */
+function newId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export function Reader() {
   const { id = '' } = useParams<{ id: string }>();
@@ -28,6 +42,9 @@ export function Reader() {
   const [contentLang] = useContentLang();
   const [mode, setMode] = useState<BilingualMode>('single');
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [highlights, setHighlightsState] = useState<Highlight[]>([]);
+  const [notes, setNotesState] = useState<Note[]>([]);
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
   const articleRef = useRef<HTMLElement | null>(null);
   const lastSaveRef = useRef(0);
 
@@ -46,6 +63,20 @@ export function Reader() {
   useEffect(() => {
     if (!id) return;
     void getBookmark(id).then((b) => setIsBookmarked(Boolean(b)));
+  }, [id]);
+
+  // Load highlights + notes when the article changes
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    void Promise.all([getHighlights(id), getNotes(id)]).then(([hs, ns]) => {
+      if (cancelled) return;
+      setHighlightsState(hs);
+      setNotesState(ns);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   // Restore scroll on mount; track scroll for progress (throttled to 1s)
@@ -114,6 +145,72 @@ export function Reader() {
     }
   }, [id, isBookmarked, meta?.id]);
 
+  // ---- Highlight / note helpers (Phase 2) -----------------------------
+  // Maps paragraphId -> first matching highlight/note, used to thread
+  // state into each ParagraphView without an extra context provider.
+  const highlightByPara = useMemo(() => {
+    const m = new Map<string, Highlight>();
+    for (const h of highlights) m.set(h.paragraphId, h);
+    return m;
+  }, [highlights]);
+  const noteByPara = useMemo(() => {
+    const m = new Map<string, Note>();
+    for (const n of notes) m.set(n.paragraphId, n);
+    return m;
+  }, [notes]);
+
+  const onToggleHighlight = useCallback(
+    (p: Paragraph) => {
+      const existing = highlightByPara.get(p.id);
+      const next: Highlight[] = existing
+        ? highlights.filter((h) => h.id !== existing.id)
+        : [
+            ...highlights,
+            {
+              id: newId(),
+              articleId: id,
+              paragraphId: p.id,
+              text: p.text.slice(0, 120),
+              createdAt: new Date().toISOString(),
+            },
+          ];
+      setHighlightsState(next);
+      void setHighlights(id, next);
+    },
+    [highlightByPara, highlights, id],
+  );
+
+  const onSaveNote = useCallback(
+    (p: Paragraph, text: string) => {
+      const existing = noteByPara.get(p.id);
+      const now = new Date().toISOString();
+      const next: Note[] = existing
+        ? notes.map((n) => (n.id === existing.id ? { ...n, text, updatedAt: now } : n))
+        : [
+            ...notes,
+            {
+              id: newId(),
+              articleId: id,
+              paragraphId: p.id,
+              text,
+              updatedAt: now,
+            },
+          ];
+      setNotesState(next);
+      void setNotes(id, next);
+    },
+    [noteByPara, notes, id],
+  );
+
+  const onDeleteNote = useCallback(
+    (noteId: string) => {
+      const next = notes.filter((n) => n.id !== noteId);
+      setNotesState(next);
+      void setNotes(id, next);
+    },
+    [notes, id],
+  );
+
   if (loading) {
     return (
       <div className="prose-reader py-20 text-secondary dark:text-dark-secondary">
@@ -163,6 +260,18 @@ export function Reader() {
             >
               {mode === 'single' ? t('reader.bilingual') : t('reader.singleLang')}
             </button>
+            <button
+              type="button"
+              onClick={() => setGlossaryOpen(true)}
+              aria-pressed={glossaryOpen}
+              title={t('reader.glossary')}
+              className="rounded-card px-3 py-1.5 border border-ink/10 dark:border-dark-line
+                         bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10
+                         transition-colors duration-180"
+            >
+              <span aria-hidden="true">📖</span>{' '}
+              <span className="hidden sm:inline">{t('reader.glossary')}</span>
+            </button>
             <ContentLangToggle />
             <button
               type="button"
@@ -206,13 +315,26 @@ export function Reader() {
         </header>
 
         {mode === 'single' ? (
-          <SingleColumn paragraphs={primary.paragraphs} lang={safeLang} />
+          <SingleColumn
+            paragraphs={primary.paragraphs}
+            lang={safeLang}
+            highlightByPara={highlightByPara}
+            noteByPara={noteByPara}
+            onToggleHighlight={onToggleHighlight}
+            onSaveNote={onSaveNote}
+            onDeleteNote={onDeleteNote}
+          />
         ) : (
           <BilingualColumns
             primary={primary.paragraphs}
             primaryLang={safeLang}
             secondary={secondary?.paragraphs ?? []}
             secondaryLang={safeLang === 'zh-CN' ? 'en' : 'zh-CN'}
+            highlightByPara={highlightByPara}
+            noteByPara={noteByPara}
+            onToggleHighlight={onToggleHighlight}
+            onSaveNote={onSaveNote}
+            onDeleteNote={onDeleteNote}
           />
         )}
 
@@ -234,6 +356,8 @@ export function Reader() {
           {primary.source} · {primary.licenseNote}
         </p>
       </article>
+
+      <GlossaryPanel open={glossaryOpen} onClose={() => setGlossaryOpen(false)} />
     </Swipeable>
   );
 }
@@ -241,16 +365,35 @@ export function Reader() {
 function SingleColumn({
   paragraphs,
   lang,
+  highlightByPara,
+  noteByPara,
+  onToggleHighlight,
+  onSaveNote,
+  onDeleteNote,
 }: {
   paragraphs: Paragraph[];
   lang: LangCode;
+  highlightByPara: Map<string, Highlight>;
+  noteByPara: Map<string, Note>;
+  onToggleHighlight: (p: Paragraph) => void;
+  onSaveNote: (p: Paragraph, text: string) => void;
+  onDeleteNote: (noteId: string) => void;
 }) {
   return (
     <div>
       {paragraphs
         .filter((p) => p.id.split('-').slice(-1)[0] !== '001' || p.kind !== 'heading') // skip the duplicate title heading
         .map((p) => (
-          <ParagraphView key={p.id} p={p} lang={lang} />
+          <ParagraphView
+            key={p.id}
+            p={p}
+            lang={lang}
+            isHighlighted={highlightByPara.has(p.id)}
+            note={noteByPara.get(p.id)}
+            onToggleHighlight={() => onToggleHighlight(p)}
+            onSaveNote={(text) => onSaveNote(p, text)}
+            onDeleteNote={onDeleteNote}
+          />
         ))}
     </div>
   );
@@ -261,11 +404,21 @@ function BilingualColumns({
   primaryLang,
   secondary,
   secondaryLang,
+  highlightByPara,
+  noteByPara,
+  onToggleHighlight,
+  onSaveNote,
+  onDeleteNote,
 }: {
   primary: Paragraph[];
   primaryLang: LangCode;
   secondary: Paragraph[];
   secondaryLang: LangCode;
+  highlightByPara: Map<string, Highlight>;
+  noteByPara: Map<string, Note>;
+  onToggleHighlight: (p: Paragraph) => void;
+  onSaveNote: (p: Paragraph, text: string) => void;
+  onDeleteNote: (noteId: string) => void;
 }) {
   // Align by id; missing ids in secondary are shown as muted placeholder
   return (
@@ -281,11 +434,29 @@ function BilingualColumns({
               className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1 py-3 border-b border-ink/5 dark:border-dark-line/60"
             >
               <div>
-                <ParagraphView p={p} lang={primaryLang} compact />
+                <ParagraphView
+                  p={p}
+                  lang={primaryLang}
+                  compact
+                  isHighlighted={highlightByPara.has(p.id)}
+                  note={noteByPara.get(p.id)}
+                  onToggleHighlight={() => onToggleHighlight(p)}
+                  onSaveNote={(text) => onSaveNote(p, text)}
+                  onDeleteNote={onDeleteNote}
+                />
               </div>
               <div>
                 {twin ? (
-                  <ParagraphView p={twin} lang={secondaryLang} compact />
+                  <ParagraphView
+                    p={twin}
+                    lang={secondaryLang}
+                    compact
+                    isHighlighted={highlightByPara.has(p.id)}
+                    note={noteByPara.get(p.id)}
+                    onToggleHighlight={() => onToggleHighlight(p)}
+                    onSaveNote={(text) => onSaveNote(p, text)}
+                    onDeleteNote={onDeleteNote}
+                  />
                 ) : (
                   <p className="text-sm italic text-secondary dark:text-dark-secondary">
                     ({secondaryLang === 'zh-CN' ? '暂无中文译文' : 'No translation yet'})

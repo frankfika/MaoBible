@@ -5,6 +5,7 @@ import { ThemeToggle } from './ThemeToggle';
 const NAV_ITEMS = [
   { to: '/', key: 'today' },
   { to: '/library', key: 'library' },
+  { to: '/explore', key: 'explore' },
   { to: '/me', key: 'me' },
 ] as const;
 

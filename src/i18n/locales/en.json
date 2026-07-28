@@ -6,6 +6,7 @@
   "nav": {
     "today": "Today",
     "library": "Library",
+    "explore": "Explore",
     "reader": "Reader",
     "me": "Me",
     "back": "Back",
@@ -24,7 +25,21 @@
     "allArticles": "All articles",
     "byVolume": "By volume",
     "byTheme": "By theme",
-    "empty": "No matching articles"
+    "empty": "No matching articles",
+    "noParagraphMatch": "No matches in article text",
+    "inArticle": "in",
+    "matchesIn": "{{count}} match",
+    "matchesIn_other": "{{count}} matches",
+    "inArticleHeader": "Matches in article text"
+  },
+  "explore": {
+    "title": "Reading Paths",
+    "intro": "Three curated paths that thread classic essays by theme.",
+    "articles": "Articles",
+    "comingSoon": "Coming soon",
+    "backToPaths": "Back to all paths",
+    "notYetAvailable": "This article is not yet available. We are preparing it.",
+    "openReader": "Open in reader"
   },
   "reader": {
     "toc": "Contents",
@@ -41,7 +56,14 @@
     "written": "Written {{date}}",
     "themes": "Themes",
     "keyIdeas": "Key Ideas",
-    "connections": "Related"
+    "connections": "Related",
+    "glossary": "Glossary",
+    "saveNote": "Save",
+    "editNote": "Edit",
+    "deleteNote": "Delete",
+    "cancelNote": "Cancel",
+    "notePlaceholder": "Write your reflection or question…",
+    "noNoteYet": "No note yet — tap “Note” to start one."
   },
   "me": {
     "title": "Me",
@@ -50,12 +72,22 @@
     "notes": "Notes",
     "history": "History",
     "settings": "Settings",
-    "empty": "Nothing yet"
+    "empty": "Nothing yet",
+    "appearance": "Appearance",
+    "contentLanguage": "Content language",
+    "uiLanguage": "Interface language",
+    "interface": "Interface"
   },
   "theme": {
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "glossary": {
+    "title": "Glossary",
+    "subtitle": "Key concepts you will meet while reading.",
+    "searchPlaceholder": "Search terms…",
+    "empty": "No matching terms"
   },
   "language": {
     "ui": "Interface",

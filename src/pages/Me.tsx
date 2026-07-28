@@ -1,11 +1,34 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { getBookmarks, getReadingProgress } from '@/lib/storage';
 import { ARTICLES } from '@/data/manifest';
-import { Link } from 'react-router-dom';
+import { useTheme } from '@/hooks/useTheme';
+import { useContentLang } from '@/hooks/useContentLang';
+import { useUiLang } from '@/hooks/useUiLang';
+import type { LangCode } from '@/types';
+
+const UI_LANGS: { code: LangCode; label: string }[] = [
+  { code: 'zh-CN', label: '中文' },
+  { code: 'en', label: 'English' },
+];
+
+const CONTENT_LANGS: { code: LangCode; label: string }[] = [
+  { code: 'zh-CN', label: '中文' },
+  { code: 'en', label: 'English' },
+];
+
+const THEME_MODES: { value: 'light' | 'dark' | 'system'; glyph: string }[] = [
+  { value: 'light', glyph: '☀' },
+  { value: 'dark', glyph: '☾' },
+  { value: 'system', glyph: '◐' },
+];
 
 export function Me() {
   const { t } = useTranslation();
+  const [themeMode, setThemeMode] = useTheme();
+  const [contentLang, setContentLang] = useContentLang();
+  const [uiLang, setUiLang] = useUiLang();
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [recent, setRecent] = useState<
     { id: string; updatedAt: string; scrollFraction: number }[]
@@ -29,6 +52,110 @@ export function Me() {
   return (
     <div className="prose-reader py-10 space-y-10">
       <h1 className="font-serif-cn text-2xl">{t('me.title')}</h1>
+
+      <section>
+        <h2 className="font-serif-cn text-lg mb-3 text-secondary dark:text-dark-secondary">
+          {t('me.settings')}
+        </h2>
+        <div className="space-y-5">
+          {/* Appearance: theme mode */}
+          <div>
+            <p className="text-sm text-ink dark:text-dark-ink mb-2">
+              {t('me.appearance')}
+            </p>
+            <div
+              role="group"
+              aria-label={t('me.appearance')}
+              className="inline-flex rounded-card border border-ink/10 dark:border-dark-line overflow-hidden"
+            >
+              {THEME_MODES.map((m) => {
+                const active = themeMode === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setThemeMode(m.value)}
+                    className={[
+                      'px-3 py-1.5 text-sm transition-colors duration-180',
+                      active
+                        ? 'bg-ink text-paper dark:bg-dark-ink dark:text-dark-paper'
+                        : 'bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10',
+                    ].join(' ')}
+                  >
+                    <span aria-hidden="true" className="mr-1">{m.glyph}</span>
+                    {t(`theme.${m.value}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Content language */}
+          <div>
+            <p className="text-sm text-ink dark:text-dark-ink mb-2">
+              {t('me.contentLanguage')}
+            </p>
+            <div
+              role="group"
+              aria-label={t('me.contentLanguage')}
+              className="inline-flex rounded-card border border-ink/10 dark:border-dark-line overflow-hidden"
+            >
+              {CONTENT_LANGS.map((l) => {
+                const active = contentLang === l.code;
+                return (
+                  <button
+                    key={l.code}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setContentLang(l.code)}
+                    className={[
+                      'px-3 py-1.5 text-sm transition-colors duration-180',
+                      active
+                        ? 'bg-ink text-paper dark:bg-dark-ink dark:text-dark-paper'
+                        : 'bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10',
+                    ].join(' ')}
+                  >
+                    {l.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* UI language */}
+          <div>
+            <p className="text-sm text-ink dark:text-dark-ink mb-2">
+              {t('me.uiLanguage')}
+            </p>
+            <div
+              role="group"
+              aria-label={t('me.uiLanguage')}
+              className="inline-flex rounded-card border border-ink/10 dark:border-dark-line overflow-hidden"
+            >
+              {UI_LANGS.map((l) => {
+                const active = uiLang === l.code;
+                return (
+                  <button
+                    key={l.code}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setUiLang(l.code)}
+                    className={[
+                      'px-3 py-1.5 text-sm transition-colors duration-180',
+                      active
+                        ? 'bg-ink text-paper dark:bg-dark-ink dark:text-dark-paper'
+                        : 'bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10',
+                    ].join(' ')}
+                  >
+                    {l.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section>
         <h2 className="font-serif-cn text-lg mb-3 text-secondary dark:text-dark-secondary">
