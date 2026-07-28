@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "id": "on-practice-1937",
+    "title": "实践论",
+    "subtitle": "论认识和实践的关系——知和行的关系",
+    "author": "毛泽东",
+    "writtenAt": "1937-07",
+    "readingMinutes": 22,
+    "volume": "《毛泽东选集》第一卷",
+    "themes": ["实践", "认识论", "辩证法", "学习"],
+    "summary": "为总结中国革命经验、肃清教条主义而写的哲学论文。系统论述实践—认识—再实践的循环,确立\"通过实践检验真理\"的认识路线。"
+  },
+  "translations": {
+    "zh-CN": {
+      "language": "zh-CN",
+      "source": "《毛泽东选集》第一卷(人民出版社 1991 年第 2 版)",
+      "licenseNote": "原文来自中国共产党新闻网/求是网公开版本,属于官方公开内容",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "op-001", "kind": "heading", "text": "实践论" },
+        { "id": "op-002", "kind": "body", "text": "马克思以前的唯物论,离开人的社会性,离开人的历史发展,去观察认识问题,因此不能了解认识对社会实践的依赖关系,即认识对生产和阶级斗争的依赖关系。" },
+        { "id": "op-003", "kind": "body", "text": "首先,马克思主义者认为人类的生产活动是最基本的实践活动,是决定其他一切活动的东西。人的认识,主要地依赖于物质的生产活动,逐渐地了解自然的现象、自然的性质、自然的规律性、人和自然的关系;而且经过生产活动,也在各种不同程度上逐渐地认识了人和人的一定的相互关系。" },
+        { "id": "op-004", "kind": "body", "text": "一切这些知识,离开生产活动是不能得到的。在没有阶级的社会中,每个人以社会一员的资格,同其他社会成员协力,结成一定的生产关系,从事生产活动,以解决人类物质生活问题。在各种阶级的社会中,各阶级的社会成员,则又以各种不同的方式,结成一定的生产关系,从事生产活动,以解决人类物质生活问题。" },
+        { "id": "op-005", "kind": "body", "text": "这是人的认识发展的基本来源。人的社会实践,不限于生产活动一种形式,还有多种其他的形式,阶级斗争,政治生活,科学和艺术的活动,总之社会实际生活的一切领域都是社会的人所参加的。因此,人的认识,在物质生活以外,还从政治生活、文化生活中(与物质生活密切联系),在各种不同程度上,知道人和人的各种关系。" },
+        { "id": "op-006", "kind": "heading", "text": "认识的过程" },
+        { "id": "op-007", "kind": "body", "text": "人在实践过程中,开始只是看到过程中各个事物的现象方面,看到各个事物的片面,看到各个事物之间的外部联系。例如有些外面的人们到延安来考察,头一二天,他们看到了延安的地形、街道、屋宇,接触了许多的人,参加了宴会、晚会和群众大会,听到了各种说话,看到了各种文件,这些就是事物的现象,事物的各个片面以及这些事物的外部联系。" },
+        { "id": "op-008", "kind": "body", "text": "这时侯,他们还不能做出理论性的概括。如果他们做了这样的概括,那也是表面的、没有根据的、或者是一厢情愿的。这样,认识的第一个阶段是感性认识。第二步才进入理性认识,这是认识的高级阶段。" }
+      ]
+    },
+    "en": {
+      "language": "en",
+      "translator": "Foreign Languages Press",
+      "source": "On Practice, FLP, 1954 (reproduced widely on marxists.org)",
+      "licenseNote": "Based on the standard FLP English translation; the 1954 publication is now in the public domain in most jurisdictions.",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "op-001", "kind": "heading", "text": "On Practice" },
+        { "id": "op-002", "kind": "body", "text": "Pre-Marxist materialism viewed the problem of knowledge apart from the social nature of man and apart from his historical development, and was therefore unable to understand the dependence of knowledge on social practice, that is, on production and class struggle." },
+        { "id": "op-003", "kind": "body", "text": "First of all, Marxists consider man's production activity to be his most fundamental practical activity, the activity which determines all his other activities. Man's knowledge depends mainly on his activity in material production, through which he gradually comes to understand natural phenomena, the properties of natural things, the laws of nature, and the relations between himself and nature; and through his activity in production he also gradually comes to understand, in varying degrees, certain relations between himself and other people." },
+        { "id": "op-004", "kind": "body", "text": "None of this knowledge can be acquired apart from production activity. In classless societies, every member of society, as a social being, joins forces with the other members and enters into certain production relations with them in order to engage in production and solve the problem of man's material life. In class societies, members of the different social classes likewise enter into certain production relations in various ways in order to engage in production and solve the problem of their material life." },
+        { "id": "op-005", "kind": "body", "text": "This is the primary source from which man's knowledge develops. Man's social practice is not confined to production activity alone; it has many other forms — class struggle, political life, scientific and artistic pursuits; in short, every form of social activity in which man takes part. Consequently, in addition to material life, man's knowledge, in varying degrees, reflects the various relations between men in political life and in cultural life (which are themselves in close connection with material life)." },
+        { "id": "op-006", "kind": "heading", "text": "The Process of Knowledge" },
+        { "id": "op-007", "kind": "body", "text": "In the process of practice, man at first sees only the phenomenal side, the separate aspects, the external relations of things. For instance, some people from outside come to Yenan to make observations; for one or two days they see the terrain, the streets, the houses; they meet many people, attend banquets, evening parties and mass meetings, hear all kinds of talk, and read all kinds of documents — all this is seeing things in their phenomenal aspect, seeing them one-sidedly and in their external relations." },
+        { "id": "op-008", "kind": "body", "text": "At this stage, they have not yet made any theoretical generalization. If they did attempt to generalize, the result could only be one-sided and groundless, or it might be a hasty summary based on preconceptions. This is the first stage of knowledge, the stage of perceptual knowledge. The second stage is the stage of rational knowledge, the higher stage." }
+      ]
+    }
+  }
+}

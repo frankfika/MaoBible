@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* -------------------------------------------------------------------------
+ * Design tokens — sourced from docs/product-plan.md §6
+ * Light mode default; .dark class flips to dark palette
+ * ------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    /* Spacing scale: 4px base */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-12: 48px;
+    --space-16: 64px;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans;
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  body.dark {
+    @apply bg-dark-paper text-dark-ink;
+  }
+
+  /* Respect user preference for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Card surface — soft border, no heavy shadow */
+  .card {
+    @apply rounded-card border border-ink/10 dark:border-dark-line bg-white/40 dark:bg-dark-ink/5
+           transition-colors duration-220;
+  }
+
+  /* Reader body — Chinese-first reading width */
+  .prose-reader {
+    @apply max-w-reader mx-auto px-5 sm:px-8;
+  }
+
+  .prose-reader p {
+    @apply text-body-lg my-6;
+  }
+
+  .prose-reader .para-zh {
+    @apply font-serif-cn;
+  }
+
+  .prose-reader .para-en {
+    @apply font-serif italic text-ink/90 dark:text-dark-ink/90;
+  }
+
+  /* Subtle link */
+  .link-quiet {
+    @apply text-moss hover:text-cinnabar underline decoration-moss/30 hover:decoration-cinnabar
+           underline-offset-4 transition-colors duration-180;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar for clean look in horizontal carousels */
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}

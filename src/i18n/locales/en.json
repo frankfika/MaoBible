@@ -1,0 +1,74 @@
+{
+  "app": {
+    "name": "MaoBible",
+    "tagline": "A quiet, trusted space to read and study the Selected Works of Mao Zedong in multiple languages."
+  },
+  "nav": {
+    "today": "Today",
+    "library": "Library",
+    "reader": "Reader",
+    "me": "Me",
+    "back": "Back",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "today": {
+    "daily": "Today's Passage",
+    "intro": "3-minute Guide",
+    "continue": "Continue Reading",
+    "thought": "Today's Question"
+  },
+  "library": {
+    "title": "Library",
+    "search": "Search articles, paragraphs, themes",
+    "allArticles": "All articles",
+    "byVolume": "By volume",
+    "byTheme": "By theme",
+    "empty": "No matching articles"
+  },
+  "reader": {
+    "toc": "Contents",
+    "prev": "Previous",
+    "next": "Next",
+    "singleLang": "Single language",
+    "bilingual": "Bilingual",
+    "highlight": "Highlight",
+    "note": "Note",
+    "explain": "Explain",
+    "languageSwitch": "Switch content language",
+    "estimatedTime": "~{{minutes}} min",
+    "by": "by",
+    "written": "Written {{date}}",
+    "themes": "Themes",
+    "keyIdeas": "Key Ideas",
+    "connections": "Related"
+  },
+  "me": {
+    "title": "Me",
+    "bookmarks": "Bookmarks",
+    "highlights": "Highlights",
+    "notes": "Notes",
+    "history": "History",
+    "settings": "Settings",
+    "empty": "Nothing yet"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "ui": "Interface",
+    "content": "Content"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "done": "Done"
+  }
+}

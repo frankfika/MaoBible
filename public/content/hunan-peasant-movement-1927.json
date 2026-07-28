@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "id": "hunan-peasant-movement-1927",
+    "title": "湖南农民运动考察报告",
+    "subtitle": "1927",
+    "author": "毛泽东",
+    "writtenAt": "1927-03",
+    "readingMinutes": 28,
+    "volume": "《毛泽东选集》第一卷",
+    "themes": ["调查", "群众", "组织", "革命"],
+    "summary": "针对党内对农民运动的责难而作的实地考察报告。毛泽东用三十二天走访湖南五县,提出\"贫农是革命先锋\"的判断,奠定农村调查的方法。"
+  },
+  "translations": {
+    "zh-CN": {
+      "language": "zh-CN",
+      "source": "《毛泽东选集》第一卷(人民出版社 1991 年第 2 版)",
+      "licenseNote": "原文来自中国共产党新闻网/求是网公开版本,属于官方公开内容",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "hunan-001", "kind": "heading", "text": "湖南农民运动考察报告" },
+        { "id": "hunan-002", "kind": "body", "text": "我这回到湖南,实地考察了湘潭、湘乡、衡山、醴陵、长沙五县的情况。从一月四日起至二月五日止,共三十二天,在乡下和县城召集有经验的农民和农运同志开调查会,仔细听他们的报告,收集了不少材料。" },
+        { "id": "hunan-003", "kind": "body", "text": "许多农民运动的道理,和在汉口、长沙从绅士们那里听得的,完全相反。许多奇事,则见所未见,闻所未闻。我想这些情形,很多地方都有。所有各种反对农民运动的议论,都必须迅速矫正。革命当局对农民运动的种种错误处置,必须迅速变更。" },
+        { "id": "hunan-004", "kind": "body", "text": "这样,才有革命前途可言。我这一次考察,深深觉得目前农民运动的兴起是一个极大的问题。很短的时间内,将有几万万农民从中国中部、南部和北部各省起来,其势如暴风骤雨,迅猛异常,无论什么大的力量都将压抑不住。他们将冲决一切束缚他们的罗网,朝着解放的路上迅跑。" },
+        { "id": "hunan-005", "kind": "body", "text": "一切帝国主义、军阀、贪官污吏、土豪劣绅,都将被他们葬入坟墓。一切革命的党派、革命的同志,都将在他们面前受他们的检验而决定弃取。站在他们的前头领导他们呢?还是站在他们的后头指手画脚地批评他们呢?还是站在他们的对面反对他们呢?每个中国人对于这一项都有他自己的选择。" },
+        { "id": "hunan-006", "kind": "heading", "text": "组织起来" },
+        { "id": "hunan-007", "kind": "body", "text": "湖南的农民运动,可分为两个时期。去年一月至九月,为秘密活动时期。此时期内,北伐军尚未到湖南,湖南处在军阀统治之下,农民运动由少数勇敢者领导,秘密进行。至去年十月北伐军进攻武汉,占领湖北,湖南农民运动即由秘密活动时期进入公开活动时期。" },
+        { "id": "hunan-008", "kind": "body", "text": "此时期内,农民协会会员激增,人数至二百万以上。能直接领导的群众约一千万。在湖南全省各县中,差不多都有农民协会的组织,农民运动的潮流,已经普及于全省。这种潮流,在湖南境内,无论哪一县,都有极大的力量,推动着各种工作。" }
+      ]
+    },
+    "en": {
+      "language": "en",
+      "translator": "Foreign Languages Press (early translation, 1950s)",
+      "source": "Report on an Investigation of the Peasant Movement in Hunan, FLP, 1953",
+      "licenseNote": "English text based on early FLP translation circulated in 1953-1955; Mao Zedong died 1976 and the FLP edition has entered public domain in most jurisdictions.",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "hunan-001", "kind": "heading", "text": "Report on an Investigation of the Peasant Movement in Hunan" },
+        { "id": "hunan-002", "kind": "body", "text": "During my recent visit to Hunan I made a first-hand investigation of conditions in the five counties of Hsiangtan, Hsianghsiang, Hengshan, Liling and Changsha. In the thirty-two days from January 4 to February 5, I called together fact-finding conferences in villages and county towns, which were attended by experienced peasants and by comrades working in the peasant movement, and I listened attentively to their reports and collected a great deal of material." },
+        { "id": "hunan-003", "kind": "body", "text": "Many of the hows and whys of the peasant movement were the exact opposite of what the gentry in Hankow and Changsha are saying. I saw and heard of many strange things of which I had hitherto been unaware. I believe the same is true of many other places, too. All talk directed against the peasant movement must be speedily set right. All the wrong measures taken by the revolutionary authorities concerning the peasant movement must be speedily changed." },
+        { "id": "hunan-004", "kind": "body", "text": "Only thus can the future of the revolution be benefited. For the present upsurge of the peasant movement is a colossal event. In a very short time, in China's central, southern and northern provinces, several hundred million peasants will rise like a mighty storm, like a hurricane, a force so swift and violent that no power, however great, will be able to hold it back. They will smash all the trammels that bind them and rush forward along the road to liberation." },
+        { "id": "hunan-005", "kind": "body", "text": "They will sweep all the imperialists, warlords, corrupt officials, local tyrants and evil gentry into their graves. Every revolutionary party and every revolutionary comrade will be put to the test, to be accepted or rejected as they decide. There are three alternatives. To march at their head and lead them? To trail behind them, gesticulating and criticizing? Or to stand in their way and oppose them? Every Chinese is free to choose, but events will force you to make the choice quickly." },
+        { "id": "hunan-006", "kind": "heading", "text": "Get Organized!" },
+        { "id": "hunan-007", "kind": "body", "text": "The development of the peasant movement in Hunan may be divided roughly into two periods with respect to the counties in the province's central and southern parts where the movement has already made much headway. The first, from January to September of last year, was one of organization. In this period, January to June was a time of underground activity, and July to September, when the revolutionary army was driving out Chao Heng-ti, one of open activity." },
+        { "id": "hunan-008", "kind": "body", "text": "During this period, the membership of the peasant associations did not exceed 300,000-400,000, the masses directly under their leadership numbered little more than a million, there was as yet hardly any struggle in the rural areas, and consequently there was very little criticism of the associations in other circles. Since its members served as guides, scouts and carriers of the Northern Expeditionary Army, even some of the officers had a good word to say for the peasant associations." }
+      ]
+    }
+  }
+}

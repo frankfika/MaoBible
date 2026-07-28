@@ -1,0 +1,74 @@
+{
+  "app": {
+    "name": "MaoBible",
+    "tagline": "一处安静、可信的双语毛泽东著作阅读与思想研习空间"
+  },
+  "nav": {
+    "today": "今日",
+    "library": "书库",
+    "reader": "阅读",
+    "me": "我的",
+    "back": "返回",
+    "language": "语言",
+    "theme": "主题"
+  },
+  "today": {
+    "daily": "今日一段",
+    "intro": "3 分钟导读",
+    "continue": "继续上次阅读",
+    "thought": "今日思考"
+  },
+  "library": {
+    "title": "书库",
+    "search": "搜索文章、段落、主题",
+    "allArticles": "全部文章",
+    "byVolume": "按卷浏览",
+    "byTheme": "按主题浏览",
+    "empty": "未找到匹配的文章"
+  },
+  "reader": {
+    "toc": "目录",
+    "prev": "上一篇",
+    "next": "下一篇",
+    "singleLang": "单语",
+    "bilingual": "对照",
+    "highlight": "划线",
+    "note": "笔记",
+    "explain": "解释",
+    "languageSwitch": "切换内容语言",
+    "estimatedTime": "约 {{minutes}} 分钟",
+    "by": "作者",
+    "written": "写于 {{date}}",
+    "themes": "主题",
+    "keyIdeas": "核心观点",
+    "connections": "相关文章"
+  },
+  "me": {
+    "title": "我的",
+    "bookmarks": "收藏",
+    "highlights": "划线",
+    "notes": "笔记",
+    "history": "阅读历史",
+    "settings": "设置",
+    "empty": "暂无内容"
+  },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
+  },
+  "language": {
+    "ui": "界面语言",
+    "content": "内容语言"
+  },
+  "common": {
+    "loading": "加载中…",
+    "error": "出错了",
+    "retry": "重试",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "done": "完成"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "id": "on-contradiction-1937",
+    "title": "矛盾论",
+    "subtitle": "唯物辩证法最根本的法则",
+    "author": "毛泽东",
+    "writtenAt": "1937-08",
+    "readingMinutes": 26,
+    "volume": "《毛泽东选集》第一卷",
+    "themes": ["矛盾", "辩证法", "分析", "方法"],
+    "summary": "与《实践论》姊妹篇。系统阐释对立统一规律,提出\"矛盾普遍性\"与\"矛盾特殊性\"的分析框架,强调具体问题具体分析。"
+  },
+  "translations": {
+    "zh-CN": {
+      "language": "zh-CN",
+      "source": "《毛泽东选集》第一卷(人民出版社 1991 年第 2 版)",
+      "licenseNote": "原文来自中国共产党新闻网/求是网公开版本,属于官方公开内容",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "oc-001", "kind": "heading", "text": "矛盾论" },
+        { "id": "oc-002", "kind": "body", "text": "事物的矛盾法则,即对立统一的法则,是唯物辩证法的最根本的法则。列宁说:\"就本来的意义讲,辩证法是研究对象的本质自身中的矛盾。\"列宁常称这个法则为辩证法的本质,又称之为辩证法的核心。" },
+        { "id": "oc-003", "kind": "body", "text": "因此,我们在研究这个法则时,不得不涉及广泛的领域,不得不涉及许多的哲学问题。如果我们将这些问题都弄清楚了,我们就在根本上懂得了唯物辩证法。这些问题,将在以后各章中加以讨论。这里,只说明辩证法与形而上学两种宇宙观的争论,这个问题具有首要的意义。" },
+        { "id": "oc-004", "kind": "heading", "text": "两种宇宙观" },
+        { "id": "oc-005", "kind": "body", "text": "在人类的认识史中,从来就有关于宇宙发展法则的两种见解,一种是形而上学的见解,一种是辩证法的见解,形成了互相对立的两种宇宙观。列宁说:\"对于发展(进化)所持的两种基本的(或两种可能的?或两种在历史上常见的?)观点是:(一)认为发展是减少和增加,是重复;(二)认为发展是对立的统一(统一物分成为两个互相排斥的对立,而两个对立又互相关联着)。" },
+        { "id": "oc-006", "kind": "body", "text": "列宁说的就是这两种不同的宇宙观。所谓形而上学的庸俗发展观的外表,是和事物发展的真实情况相违反的。这种宇宙观把世界一切事物,一切事物的形态和种类,都看成是永远彼此孤立和永远不变化的。如果说有变化,也只是数量的增减和场所的变更。而这种增减和变更的原因,不在事物的内部而在事物的外部,即是由于外力的推动。" },
+        { "id": "oc-007", "kind": "body", "text": "辩证法的宇宙观,不论在中国,在欧洲,在古代就产生了。但是古代的辩证法带着自发的朴素的性质,根据当时的社会历史条件,还不可能有完备的理论,因而不能完全解释宇宙,后来又被形而上学所代替。生活在十八世纪的欧洲一些资产阶级唯物主义者,例如培根和洛克,把这种形而上学思维方式从自然科学移到哲学上,造成了当时哲学的一个特有的局限性。" },
+        { "id": "oc-008", "kind": "heading", "text": "矛盾的普遍性" },
+        { "id": "oc-009", "kind": "body", "text": "为了叙述的便利起见,我在这里首先说明矛盾的普遍性的问题,然后说明矛盾的特殊性的问题,最后再说明矛盾的主要方面和次要方面的相互转化及主流与支流的问题,作为本节的总结。" }
+      ]
+    },
+    "en": {
+      "language": "en",
+      "translator": "Foreign Languages Press",
+      "source": "On Contradiction, FLP, 1957 (reproduced widely on marxists.org)",
+      "licenseNote": "Based on the standard FLP English translation; the 1957 publication is now in the public domain in most jurisdictions.",
+      "updatedAt": "2026-07-28",
+      "status": "published",
+      "paragraphs": [
+        { "id": "oc-001", "kind": "heading", "text": "On Contradiction" },
+        { "id": "oc-002", "kind": "body", "text": "The law of the contradiction in things, i.e., the law of the unity of opposites, is the fundamental law of materialist dialectics. Lenin said: \"Dialectics in the proper sense is the study of contradiction in the essence itself of things.\" Lenin often called this law the essence of dialectics; he also called it the kernel of dialectics." },
+        { "id": "oc-003", "kind": "body", "text": "In studying the law, therefore, we cannot but touch upon a wide range of problems, upon a number of philosophical questions. If we can get a clear understanding of all these problems, we shall have a fundamental grasp of materialist dialectics. These problems will be discussed in the following chapters. Here I shall only explain the opposition between the dialectical world outlook and the metaphysical world outlook, a question of primary importance." },
+        { "id": "oc-004", "kind": "heading", "text": "Two World Outlooks" },
+        { "id": "oc-005", "kind": "body", "text": "Throughout the history of human knowledge, there have been two views concerning the law of development of the universe — the metaphysical view and the dialectical view, forming two opposing world outlooks. Lenin said: \"The two basic (or two possible? or two historically observable?) conceptions of development (evolution) are: (1) development as decrease and increase, as repetition, and (2) development as a unity of opposites (the division of a unity into mutually exclusive opposites and their reciprocal relation)." },
+        { "id": "oc-006", "kind": "body", "text": "Lenin was referring to these two different world outlooks. The metaphysical world outlook sees things as isolated, static, and one-sided. It sees change as purely quantitative increase or decrease, as a change of place, and as a mere repetition. The cause of such change, it holds, is external, due to the push or pull of an external force." },
+        { "id": "oc-007", "kind": "body", "text": "The dialectical world outlook, on the contrary, holds that things are in constant motion and change, and that the cause of such change is internal. It arose in ancient times, both in China and in Europe, but the ancient dialecticians were spontaneous and naive, and could not, given the social and historical conditions of their time, give a complete and coherent theory; later, they were replaced by metaphysics. Eighteenth-century European materialist philosophers like Bacon and Locke transferred the metaphysical mode of thinking from the natural sciences into philosophy, becoming the characteristic limitation of the philosophy of that period." },
+        { "id": "oc-008", "kind": "heading", "text": "The Universality of Contradiction" },
+        { "id": "oc-009", "kind": "body", "text": "For convenience in exposition, I shall deal first with the question of the universality of contradiction, then with the particularity of contradiction, and conclude with a discussion of the principal and the secondary aspect of a contradiction and the transformation of the one into the other as a summary of this section." }
+      ]
+    }
+  }
+}
