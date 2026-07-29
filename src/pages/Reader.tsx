@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useArticle } from '@/hooks/useArticle';
 import { useContentLang } from '@/hooks/useContentLang';
@@ -33,6 +33,7 @@ type Mode = 'single' | 'bilingual';
  */
 export function Reader() {
   const { id = '' } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { article, loading, error } = useArticle(id);
   const [contentLang, setContentLang] = useContentLang();
@@ -113,6 +114,42 @@ export function Reader() {
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [article, id]);
+
+  // Hash-based jump from Discover page: /read/{id}#{paragraphId} → scroll
+  // to that paragraph and briefly highlight it.
+  useEffect(() => {
+    if (!article) return;
+    const hash = location.hash.replace(/^#/, '');
+    if (!hash) return;
+    // Wait one frame so DOM is ready (paragraphs just rendered above).
+    const t = window.setTimeout(() => {
+      const el = articleRef.current?.querySelector<HTMLElement>(
+        `[data-para-id="${hash}"]`,
+      );
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Highlight: add ring, then remove after 1.6s
+      el.classList.add(
+        'ring-2',
+        'ring-cinnabar/40',
+        'ring-offset-2',
+        'ring-offset-paper',
+        'dark:ring-offset-dark-paper',
+        'rounded',
+        'transition',
+      );
+      window.setTimeout(() => {
+        el.classList.remove(
+          'ring-2',
+          'ring-cinnabar/40',
+          'ring-offset-2',
+          'ring-offset-paper',
+          'dark:ring-offset-dark-paper',
+        );
+      }, 1600);
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [article, location.hash, id]);
 
   if (loading) {
     return (

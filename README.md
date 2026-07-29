@@ -9,7 +9,7 @@ A mobile-first PWA that lets you read 22 articles from the official 1991 People'
 
 - **📚 书架 (Shelf)** — one-screen home with continue-reading, daily pick, theme chips, 22-article grid, bookmarks
 - **🤖 解读 (AI)** — chat with a Mao-reading AI assistant + 3 tools (段落解读 / 摘要 / 推荐) + 6 preset questions
-- **🔍 发现 (Discover)** — **心情 / 现状 → AI 推荐**: 用户写下当前状态, AI 识别处境 + 推荐 1-3 篇毛选 + 具体章节 (看这里: 信心/实践/矛盾...)
+- **🔍 发现 (Discover)** — **毛选回应你**: 用户写下当前状态, AI 两步找出**直接对应处境的毛选段落** — 处境识别 + 文章 + 段落原文 + 现代白话 + 为什么这一段对你有用. 点段落直接跳到 reader 那段.
 - **👤 我 (Me)** — this-week reading stats with 7-day bar chart, cumulative progress, recent reading, bookmarks
 - **📖 Reader** — top progress bar, default-expanded AI 解读 panel, slide-up TOC drawer, tap any paragraph for an AI 白话 explanation
 - **🌐 Bilingual** — single-language (zh-CN | en) or paragraph-aligned bilingual mode

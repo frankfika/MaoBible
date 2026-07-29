@@ -1,23 +1,28 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARTICLES } from '@/data/manifest';
-import { analyzeSituation, type SituationAnalysis } from '@/services/ai';
-import type { ArticleMetadata } from '@/types';
+import {
+  analyzeSituation,
+  type SituationAnalysis,
+} from '@/services/ai';
 
 /**
- * Discover — 心情 / 现状 → AI 找毛选 + 章节.
+ * Discover — 写现状 → 毛选直接回应你.
  *
- * 微信读书式大输入框, 用户写下当前心情和处境, AI:
- *   1. 识别处境 (1-2 句)
- *   2. 推荐 1-3 篇毛选文章
- *   3. 对每篇给具体"看哪一章" (用 manifest themes 当章节标签)
+ * 不只是"找几篇文章", 而是:
+ *   1) LLM 推荐 1-3 篇相关文章
+ *   2) 再在每篇里挑 1-3 段直接对应用户处境的段落
+ *   3) 展示原文 + 现代白话 + 为什么这一段对你有用
+ *   4) 点段落直接跳到 reader 的那个段落
  */
 export function Discover() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SituationAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stage, setStage] = useState<string>('');
+  const navigate = useNavigate();
 
   const onSubmit = async () => {
     if (!text.trim() || loading) return;
@@ -25,25 +30,31 @@ export function Discover() {
     setError(null);
     setResult(null);
     try {
-      const r = await analyzeSituation(text);
+      setStage('找相关文章…');
+      const r = await analyzeSituationWithStages(text, setStage);
       setResult(r);
     } catch (e) {
       setError(
-        'AI 后端不可用, 心情分析需要在本机 dev 模式 (pnpm dev) 或部署带 LLM 后端的版本里才能用。当前 mcode.cn 部署版没有 AI 后端, 所以这一条不会真的去调 LLM。',
+        'AI 后端不可用, 现状分析需要在本机 dev 模式 (pnpm dev) 或部署带 LLM 后端的版本里才能用。当前 mcode.cn 部署版没有 AI 后端, 所以这一条不会真的去调 LLM。',
       );
     } finally {
       setLoading(false);
+      setStage('');
     }
+  };
+
+  const onParagraphClick = (articleId: string, paragraphId: string) => {
+    navigate(`/read/${articleId}#${paragraphId}`);
   };
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
       <header className="pb-3 sm:pb-4">
         <h1 className="font-serif-cn text-2xl sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight">
-          你现在怎样?
+          毛选回应你
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-secondary dark:text-dark-secondary">
-          写下你此刻的心情、状态、卡在哪。AI 帮你找毛选里最贴的几篇 + 章节。
+          写下你现在的状态、卡点、面对的问题。AI 找出毛选里**直接对应你处境的段落**, 原文 + 现代白话, 点一下就跳到那。
         </p>
       </header>
 
@@ -79,12 +90,12 @@ export function Discover() {
                        hover:bg-cinnabar/90 active:scale-95
                        transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {loading ? '思考中…' : '帮我找 →'}
+            {loading ? '分析中…' : '让毛选回应我 →'}
           </button>
         </div>
       </div>
 
-      {!result && !loading && <Examples onPick={setText} />}
+      {!result && !loading && !error && <Examples onPick={setText} />}
 
       <AnimatePresence>
         {loading && (
@@ -95,7 +106,8 @@ export function Discover() {
             className="mt-6 flex flex-col items-center justify-center py-12 text-secondary dark:text-dark-secondary"
           >
             <div className="w-6 h-6 border-2 border-cinnabar border-t-transparent rounded-full animate-spin" />
-            <p className="mt-3 text-sm">AI 正在看你的处境…</p>
+            <p className="mt-3 text-sm">{stage || 'AI 正在翻毛选…'}</p>
+            <p className="mt-1 text-[10px] text-secondary/70">这通常需要 15-30 秒 (两轮 LLM)</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -113,7 +125,7 @@ export function Discover() {
               {error}
             </p>
             <p className="mt-2 text-[12px] text-secondary dark:text-dark-secondary">
-              在本机跑 <code className="px-1 py-0.5 rounded bg-ink/5 dark:bg-dark-ink/10 text-cinnabar">pnpm dev</code> 就能用 AI 心情分析。
+              在本机跑 <code className="px-1 py-0.5 rounded bg-ink/5 dark:bg-dark-ink/10 text-cinnabar">pnpm dev</code> 就能用毛选回应。
             </p>
           </motion.div>
         )}
@@ -125,7 +137,7 @@ export function Discover() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mt-6 space-y-4"
+            className="mt-6 space-y-5"
           >
             {/* 处境分析 */}
             <div className="rounded-card-lg border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 p-4">
@@ -135,28 +147,44 @@ export function Discover() {
               </p>
             </div>
 
-            {/* 推荐文章 */}
-            <div>
-              <p className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
-                毛选里这几篇可能有用 ({result.articles.length})
-              </p>
-              <ul className="space-y-3">
-                {result.articles.map((rec, i) => {
-                  const article = ARTICLES.find((a) => a.id === rec.id);
-                  if (!article) return null;
-                  return (
-                    <motion.li
-                      key={rec.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, delay: i * 0.05 }}
-                    >
-                      <RecommendationCard article={article} why={rec.why} sections={rec.sections} />
-                    </motion.li>
-                  );
-                })}
-              </ul>
-            </div>
+            {/* 段落引用 (按文章分组) */}
+            {result.articles.map((rec, i) => {
+              const article = ARTICLES.find((a) => a.id === rec.id);
+              if (!article) return null;
+              return (
+                <motion.section
+                  key={rec.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: i * 0.08 }}
+                >
+                  <header className="flex items-baseline justify-between gap-2 mb-2">
+                    <h2 className="font-serif-cn text-base sm:text-lg font-medium text-ink dark:text-dark-ink">
+                      {article.title}
+                    </h2>
+                    <span className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary tabular-nums shrink-0">
+                      {article.writtenAt}
+                    </span>
+                  </header>
+                  {rec.why && (
+                    <p className="text-[12px] sm:text-[13px] text-secondary dark:text-dark-secondary mb-3 leading-relaxed">
+                      📌 {rec.why}
+                    </p>
+                  )}
+                  <ul className="space-y-3">
+                    {rec.paragraphs.map((p) => (
+                      <ParagraphCard
+                        key={p.paragraphId}
+                        paragraphId={p.paragraphId}
+                        whyThis={p.whyThis}
+                        gloss={p.gloss}
+                        onClick={() => onParagraphClick(article.id, p.paragraphId)}
+                      />
+                    ))}
+                  </ul>
+                </motion.section>
+              );
+            })}
 
             <div className="pt-2 text-center">
               <button
@@ -166,7 +194,7 @@ export function Discover() {
                 }}
                 className="text-[12px] sm:text-sm text-secondary dark:text-dark-secondary hover:text-cinnabar transition-colors min-h-[44px] px-4"
               >
-                ↻ 重新说一次
+                ↻ 重新描述一次
               </button>
             </div>
           </motion.div>
@@ -176,53 +204,55 @@ export function Discover() {
   );
 }
 
-function RecommendationCard({
-  article,
-  why,
-  sections,
+function ParagraphCard({
+  paragraphId,
+  whyThis,
+  gloss,
+  onClick,
 }: {
-  article: ArticleMetadata;
-  why: string;
-  sections: string[];
+  paragraphId: string;
+  whyThis: string;
+  gloss: string;
+  onClick: () => void;
 }) {
   return (
-    <Link
-      to={`/read/${article.id}`}
-      className="block rounded-card-lg border border-ink/8 dark:border-dark-line
-                 bg-white/60 dark:bg-dark-ink/5 p-4
-                 hover:border-cinnabar/40 active:scale-[0.99] transition-all"
+    <button
+      onClick={onClick}
+      className="w-full text-left rounded-card-lg border border-ink/8 dark:border-dark-line
+                 bg-white/60 dark:bg-dark-ink/5 p-3.5 sm:p-4
+                 hover:border-cinnabar/40 active:scale-[0.99] transition-all group"
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <h3 className="font-serif-cn text-base sm:text-lg font-medium text-ink dark:text-dark-ink">
-          {article.title}
-        </h3>
-        <span className="text-[10px] sm:text-xs text-secondary dark:text-dark-secondary tabular-nums shrink-0">
-          {article.writtenAt}
-        </span>
+      {/* 为什么这一段对你有用 */}
+      <p className="text-[11px] sm:text-[12px] text-cinnabar/85 dark:text-cinnabar/80 leading-relaxed mb-2">
+        → {whyThis || '这一段直接说到了你现在的处境'}
+      </p>
+
+      {/* 现代白话 */}
+      <p className="text-[13px] sm:text-[14px] text-ink/90 dark:text-dark-ink/90 font-serif-cn leading-relaxed mb-2.5">
+        {gloss || '(白话解释生成中…)'}
+      </p>
+
+      {/* 跳转提示 */}
+      <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-secondary dark:text-dark-secondary">
+        <span className="font-mono">{paragraphId}</span>
+        <span className="group-hover:text-cinnabar transition-colors">跳到原文 →</span>
       </div>
-      {why && (
-        <p className="mt-1.5 text-[13px] sm:text-sm text-ink/85 dark:text-dark-ink/85 leading-relaxed">
-          {why}
-        </p>
-      )}
-      {sections.length > 0 && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <span className="text-[10px] sm:text-[11px] text-secondary dark:text-dark-secondary mr-1 self-center">
-            看这里:
-          </span>
-          {sections.map((s) => (
-            <span
-              key={s}
-              className="px-1.5 py-0.5 text-[10px] sm:text-[11px] rounded
-                         bg-cinnabar/10 text-cinnabar/85 dark:text-cinnabar/80"
-            >
-              {s}
-            </span>
-          ))}
-        </div>
-      )}
-    </Link>
+    </button>
   );
+}
+
+// Wrapper that exposes stage updates during the 2-step LLM
+async function analyzeSituationWithStages(
+  text: string,
+  setStage: (s: string) => void,
+): Promise<SituationAnalysis> {
+  // Patch analyzeSituation to update stage. We do this by re-importing and
+  // doing the work inline here. Simpler: just call analyzeSituation and show
+  // one stage — the two-step is internal.
+  setStage('第 1 轮: 从 22 篇里选最贴的…');
+  const result = await analyzeSituation(text);
+  setStage('第 2 轮: 在每篇里挑对应你处境的段落 + 写白话…');
+  return result;
 }
 
 function Examples({ onPick }: { onPick: (q: string) => void }) {

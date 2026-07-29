@@ -3,7 +3,7 @@
  * In production, replace with a real backend.
  */
 import { ARTICLES } from '@/data/manifest';
-import type { ArticleMetadata } from '@/types';
+import type { ArticleMetadata, Paragraph } from '@/types';
 
 const ARTICLES_CONTEXT = ARTICLES.map(articleContextLine).join('\n');
 
@@ -67,96 +67,195 @@ ${unread.map((a) => `- ${a.title} (${a.themes.join('/')}): ${a.interpretation ??
   return callAI(prompt, system);
 }
 
+export interface RecommendedParagraph {
+  paragraphId: string;
+  /** 一句话说明为什么这一段对你有用 */
+  whyThis: string;
+  /** 现代白话解释 (50-100 字) */
+  gloss: string;
+}
+
+export interface RecommendedArticle {
+  id: string;
+  /** 为什么推荐这篇文章, 1 句 */
+  why: string;
+  /** 1-3 段最贴的段落 (paragraph id + 引用 + 白话) */
+  paragraphs: RecommendedParagraph[];
+}
+
 export interface SituationAnalysis {
   /** 1-2 句处境分析: "你正在..." */
   summary: string;
-  /** 1-3 篇推荐文章 */
-  articles: {
-    id: string;
-    /** 为什么推荐这篇文章, 1 句 */
-    why: string;
-    /** 推荐看哪几个章节 (来自 manifest themes, 或留空表示整篇都值得看) */
-    sections: string[];
-  }[];
+  /** 1-3 篇推荐文章 + 段落引用 */
+  articles: RecommendedArticle[];
+}
+
+const PARAGRAPH_GIST_CHARS = 60;
+
+/**
+ * Step 1 of situation analysis: pick 1-3 articles from 22 (using manifest
+ * metadata only — fast, no need to fetch full articles).
+ */
+async function pickArticles(text: string): Promise<Array<{ id: string; why: string }>> {
+  const validIds = new Set(ARTICLES.map((a) => a.id));
+  const catalog = ARTICLES.map((a) => {
+    const situations = a.situations?.length ? ` 适用处境: ${a.situations.slice(0, 4).join('; ')}` : '';
+    return `${a.id} 《${a.title}》 [${a.themes.join('/')}] — ${a.interpretation ?? a.summary ?? ''}${situations}`;
+  }).join('\n');
+
+  const system = `你是毛选阅读助手。用户会描述他/她现在的状态/卡点/面对的问题。你需要从下面 22 篇文章中选出 1-3 篇最贴的, 简短说明为什么。
+
+**关键约束**:
+- 只能用下面 "文章目录" 里标注的 id (slug 格式如 spark-1930, on-contradiction-1937, protracted-war-1938), 绝不能是中文标题, 也不能自己编 (如 "1930-01" 不是合法 id)
+- why 一句话, 扣用户的具体处境
+- 严格 JSON, 不要 markdown 不要解释: {"articles":[{"id":"...","why":"..."}]}
+
+文章目录 (id 是上面那种 slug, 只能从这里挑):
+${catalog}`;
+
+  const raw = await callAIJson(`用户描述:\n${text}\n\n请选 1-3 篇最贴的, 返回 JSON。`, system);
+  const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] ?? raw;
+  let parsed: any = {};
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    parsed = { articles: [] };
+  }
+  const articles = (parsed.articles ?? [])
+    .filter((a: any) => validIds.has(a.id))
+    .map((a: any) => ({ id: a.id, why: typeof a.why === 'string' ? a.why : '' }))
+    .slice(0, 3);
+
+  if (articles.length === 0) {
+    // Last-resort fallback: pick first 2 articles
+    return ARTICLES.slice(0, 2).map((a) => ({
+      id: a.id,
+      why: a.interpretation ?? '',
+    }));
+  }
+  return articles;
 }
 
 /**
- * Analyze the user's current mood + situation, recommend matching
- * articles from Mao Selected Works. Returns structured JSON.
+ * Fetch the full Article (with paragraphs) for an article id.
+ */
+async function fetchArticle(articleId: string): Promise<ArticleMetadata & { paragraphs: Paragraph[] } | null> {
+  try {
+    const r = await fetch(`/content/${articleId}.json`, { headers: { Accept: 'application/json' } });
+    if (!r.ok) return null;
+    const d = await r.json();
+    const paras: Paragraph[] = d?.translations?.['zh-CN']?.paragraphs ?? [];
+    const meta = ARTICLES.find((a) => a.id === articleId);
+    if (!meta || paras.length === 0) return null;
+    return { ...meta, paragraphs: paras };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Step 2 of situation analysis: for each article, pick 1-3 paragraphs that
+ * speak most directly to the user's situation. Returns paragraph ids.
+ */
+async function pickParagraphs(
+  text: string,
+  article: ArticleMetadata & { paragraphs: Paragraph[] },
+): Promise<Array<{ paragraphId: string; whyThis: string }>> {
+  // Build a paragraph catalog: id + first N chars of text.
+  // We skip heading paragraphs whose body is super long (those are chapter
+  // intros, not specific lines) and focus on regular body paragraphs.
+  const catalog = article.paragraphs
+    .filter((p) => p.text.length > 30)
+    .slice(0, 200) // hard cap to keep prompt small
+    .map((p) => {
+      const gist = p.text.length > PARAGRAPH_GIST_CHARS
+        ? p.text.slice(0, PARAGRAPH_GIST_CHARS) + '…'
+        : p.text;
+      return `${p.id} | ${gist}`;
+    })
+    .join('\n');
+
+  const system = `你是毛选阅读助手。用户在读《${article.title}》。你从下面这篇文章的段落里, 挑出 1-3 段**直接回应用户处境**的。优先选 body 段 (非 heading), 因为 heading 通常是章节标题而非观点。
+
+**关键约束**:
+- paragraphId 必须从下面段落目录里挑真实存在的 id, 不能编
+- whyThis 一句话, 说"这一段直接对应用户的什么处境", **不要在 whyThis 里用任何引号** (包括双引号和单引号), 用顿号 / 句号 分隔
+- 严格 JSON, 不要 markdown: {"paragraphs":[{"paragraphId":"...","whyThis":"..."}]}
+
+段落目录 (id | 摘要):
+${catalog}`;
+
+  try {
+    const raw = await callAIJson(`用户处境:\n${text}\n\n请从《${article.title}》里挑 1-3 段最贴的段落, 返回 JSON。`, system);
+    const validIds = new Set(article.paragraphs.map((p) => p.id));
+    // Try strict parse first; if it fails (LLM often puts unescaped quotes in
+    // whyThis), fall back to regex-extracting paragraphIds.
+    const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] ?? raw;
+    try {
+      const parsed = JSON.parse(jsonText) as { paragraphs?: Array<{ paragraphId?: string; whyThis?: string }> };
+      return (parsed.paragraphs ?? [])
+        .filter((p) => p.paragraphId && validIds.has(p.paragraphId))
+        .map((p) => ({ paragraphId: p.paragraphId!, whyThis: p.whyThis ?? '' }))
+        .slice(0, 3);
+    } catch {
+      // Looser fallback: extract any id-like tokens that look like paragraph ids
+      const idPattern = new RegExp(`\\b(${article.paragraphs.map((p) => p.id.replace(/[-]/g, '\\-')).join('|')})\\b`, 'g');
+      const ids: string[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = idPattern.exec(raw)) !== null) {
+        if (!ids.includes(m[1])) ids.push(m[1]);
+        if (ids.length >= 3) break;
+      }
+      return ids.map((id) => ({ paragraphId: id, whyThis: '' }));
+    }
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Analyze the user's current situation using two-step LLM:
+ *   1) Pick 1-3 articles from 22 (manifest-level).
+ *   2) For each article, pick 1-3 specific paragraphs that directly speak
+ *      to the user's situation.
+ * Returns paragraph-level recommendations with a modern-Chinese gloss for
+ * each (so the user can read the original + understand it immediately).
  */
 export async function analyzeSituation(text: string): Promise<SituationAnalysis> {
-  const validIds = new Set(ARTICLES.map((a) => a.id));
-  const validTitles = ARTICLES.map((a) => `${a.id} 《${a.title}》 (${a.themes.join('/')})`);
-
-  const system = `你是毛选 AI 助手。用户会描述他/她现在的心情和现状。你的任务:
-
-1. 简短识别用户处境 (1-2 句, "你正在..." 开头)
-2. 从下面的 22 篇文章中推荐 1-3 篇最贴切的
-3. 对每篇: 给一句话说明为什么推荐
-
-**重要**: articles 里的 id 字段必须用下面列表中标注的 id (英文/数字格式, 如 "1930-01-05"), 不是文章标题。比如 id 不能是 "实践论", 必须是 "1937-07"。如果不确定 id, 就不推荐那篇。
-
-sections 字段: 必须是 string 数组, 每个元素是从 manifest themes 里挑的标签 (如 ["实践", "认识论"], ["矛盾", "方法论"], ["整篇"])。sections 不能是对象, 必须是字符串数组。
-
-可推荐的文章 (id - 标题 - 主题):
-${validTitles.join('\n')}
-
-严格按 JSON 格式返回, 不要 markdown, 不要解释, 不要用代码块包裹:
-{"summary":"...","articles":[{"id":"...","why":"...","sections":["实践","认识论"]}]}`;
-
-  const prompt = `用户的描述:\n${text}\n\n请按要求返回 JSON。`;
-
-  // Use raw fetch here so we can distinguish "AI returned something unparseable"
-  // (fall back to keyword match) from "AI backend is unreachable" (throw so the
-  // UI can show a real reason instead of pretending the keyword fallback is the
-  // AI's answer).
-  const raw = await callAIJson(prompt, system);
-  try {
-    // Try to extract JSON from response (model sometimes wraps it)
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    const jsonText = jsonMatch ? jsonMatch[0] : raw;
-    const parsed = JSON.parse(jsonText) as SituationAnalysis;
-
-    // Validate: keep only known article ids, normalize sections to string[]
-    parsed.articles = (parsed.articles ?? []).filter((a) => validIds.has(a.id));
-    parsed.articles = parsed.articles.map((a) => ({
-      id: a.id,
-      why: typeof a.why === 'string' ? a.why : '',
-      // Coerce sections: LLM sometimes returns [{title, content}] instead of strings.
-      // Accept any shape and squash to a flat string[].
-      sections: Array.isArray(a.sections)
-        ? a.sections
-            .map((s: any) =>
-              typeof s === 'string' ? s : s?.title ?? s?.name ?? s?.theme ?? '',
-            )
-            .filter((s: string) => s.length > 0)
-        : [],
-    }));
-    if (parsed.articles.length === 0) {
-      // Fallback: pick first 2 articles
-      parsed.articles = ARTICLES.slice(0, 2).map((a) => ({
-        id: a.id,
-        why: a.interpretation ?? '',
-        sections: a.themes,
-      }));
-    }
-    return {
-      summary: parsed.summary || '你的处境已收到, 看看这些文章。',
-      articles: parsed.articles.slice(0, 3),
-    };
-  } catch (e) {
-    // Parse failed — fallback to keyword search
-    const lower = text.toLowerCase();
-    const matched = ARTICLES.filter((a) =>
-      a.situations?.some((s) => s.toLowerCase().includes(lower) || lower.includes(s.toLowerCase())),
-    ).slice(0, 3);
-    const articles = (matched.length > 0 ? matched : ARTICLES.slice(0, 3)).map((a) => ({
-      id: a.id,
-      why: a.interpretation ?? a.summary ?? '',
-      sections: a.themes,
-    }));
-    return { summary: '这些文章可能对你有用。', articles };
+  // Step 1: pick 1-3 articles (single LLM call)
+  const articlePicks = await pickArticles(text);
+  if (articlePicks.length === 0) {
+    return { summary: 'AI 暂时没找到合适的回应, 试试换个说法?', articles: [] };
   }
+
+  // Fetch + pick paragraphs in parallel for all picked articles
+  const enriched = await Promise.all(
+    articlePicks.map(async (pick) => {
+      const article = await fetchArticle(pick.id);
+      if (!article) return null;
+      const paraPicks = await pickParagraphs(text, article);
+      // Resolve paragraph ids → full text + modern gloss
+      const paragraphs: RecommendedParagraph[] = [];
+      for (const pp of paraPicks) {
+        const p = article.paragraphs.find((x) => x.id === pp.paragraphId);
+        if (!p) continue;
+        // Modern gloss in parallel
+        let gloss = '';
+        try {
+          gloss = await explainParagraph(p.text);
+        } catch {
+          gloss = '(AI 解释暂不可用)';
+        }
+        paragraphs.push({ paragraphId: p.id, whyThis: pp.whyThis, gloss });
+      }
+      return { id: pick.id, why: pick.why, paragraphs };
+    }),
+  );
+
+  return {
+    summary: `你正在面对的状态, 毛选里这 ${articlePicks.length} 篇文章里 ${articlePicks.length === 1 ? '有一段' : '有几段'}话直接回应你。`,
+    articles: enriched.filter((a): a is RecommendedArticle => Boolean(a && a.paragraphs.length > 0)),
+  };
 }
 
 async function callAI(prompt: string, system: string): Promise<string> {
