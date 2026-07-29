@@ -119,13 +119,13 @@ export function Reader() {
   };
 
   return (
-    <article ref={articleRef} className="max-w-3xl mx-auto px-4 sm:px-8 py-3 pb-24">
+    <article ref={articleRef} className="max-w-3xl mx-auto px-4 sm:px-8 py-3 pb-8">
       {/* Sticky toolbar — compact, 44px touch targets, mobile-friendly */}
       <div
-        className="sticky top-12 z-20 -mx-4 sm:-mx-8 px-4 sm:px-8 py-2
+        className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 py-1.5
                    backdrop-blur-md bg-paper/85 dark:bg-dark-paper/85
                    border-b border-ink/5 dark:border-dark-line
-                   flex items-center gap-1.5"
+                   flex items-center gap-1"
       >
         <button
           onClick={() => navigate(-1)}
@@ -164,16 +164,16 @@ export function Reader() {
         />
       </div>
 
-      <header className="pt-5 pb-4">
-        <h1 className="font-serif-cn text-2xl sm:text-4xl font-medium text-ink dark:text-dark-ink leading-tight">
+      <header className="pt-2 sm:pt-4 pb-3 sm:pb-4">
+        <h1 className="font-serif-cn text-xl sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight">
           {meta?.title}
         </h1>
         {meta?.subtitle && (
-          <p className="mt-2 text-sm sm:text-base text-secondary dark:text-dark-secondary font-serif-cn">
+          <p className="mt-1.5 sm:mt-2 text-[13px] sm:text-base text-secondary dark:text-dark-secondary font-serif-cn">
             {meta.subtitle}
           </p>
         )}
-        <p className="mt-3 text-xs text-secondary dark:text-dark-secondary">
+        <p className="mt-2 sm:mt-3 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
           {meta?.author} · {meta?.writtenAt} · {meta?.volume} · 约 {meta?.readingMinutes} 分钟
         </p>
       </header>
@@ -221,7 +221,7 @@ export function Reader() {
         )}
       </div>
 
-      <nav className="mt-16 pt-6 border-t border-ink/8 flex justify-between gap-4 text-sm">
+      <nav className="mt-12 sm:mt-16 pt-6 border-t border-ink/8 flex justify-between gap-4 text-sm">
         {prevArticle ? (
           <Link to={`/read/${prevArticle.id}`} className="flex-1 min-w-0 group">
             <div className="text-xs text-secondary dark:text-dark-secondary">

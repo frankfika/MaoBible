@@ -9,7 +9,7 @@ export function ParagraphView({ p, lang }: { p: Paragraph; lang: LangCode }) {
       <h2
         data-para-id={p.id}
         className="font-serif-cn font-medium text-ink dark:text-dark-ink
-                   text-xl mt-10 mb-3"
+                   text-lg sm:text-xl mt-8 sm:mt-10 mb-2 sm:mb-3 scroll-mt-20"
       >
         {p.text}
       </h2>
@@ -20,8 +20,8 @@ export function ParagraphView({ p, lang }: { p: Paragraph; lang: LangCode }) {
       data-para-id={p.id}
       className={
         lang === 'zh-CN'
-          ? 'para-zh text-body-lg my-4 leading-loose'
-          : 'para-en text-base my-4 leading-relaxed'
+          ? 'para-zh text-[15px] sm:text-base my-3 sm:my-4 leading-7 sm:leading-8'
+          : 'para-en text-sm sm:text-base my-3 sm:my-4 leading-6 sm:leading-7'
       }
     >
       {p.text}

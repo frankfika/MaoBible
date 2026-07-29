@@ -6,9 +6,9 @@ import { Header } from './Header';
  */
 export function AppShell() {
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="h-screen flex flex-col">
       <Header />
-      <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))]">
+      <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Outlet />
       </main>
       <BottomNav />
