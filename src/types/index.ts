@@ -41,7 +41,7 @@ export interface ArticleMetadata {
   volume?: string;
   themes: string[];
   summary?: string;
-  /** One-sentence modern interpretation ("what this means today") — shown only when user taps 解读. */
+  /** One-sentence modern interpretation ("what this means today") */
   interpretation?: string;
   /** Concrete user situations this article relates to (for Ask page search). */
   situations?: string[];
@@ -54,7 +54,11 @@ export interface Article {
   };
 }
 
-/** User-side data: bookmarks + reading progress. Stored in IndexedDB. */
+/* ------------------------------------------------------------------ *
+ * User-side data: bookmarks + reading progress + history.            *
+ * Stored in IndexedDB via idb-keyval.                                 *
+ * ------------------------------------------------------------------ */
+
 export interface Bookmark {
   articleId: string;
   paragraphId: string;
@@ -64,5 +68,37 @@ export interface Bookmark {
 export interface ReadingProgress {
   articleId: string;
   scrollFraction: number;
+  updatedAt: string;
+  /** Last paragraph id the user has reached (for resume). */
+  lastParagraphId?: string;
+  /** Cumulative time on this article (ms). */
+  totalDurationMs?: number;
+}
+
+export interface ReadingSession {
+  articleId: string;
+  startedAt: string;
+  durationMs: number;
+}
+
+export interface DailyStats {
+  date: string;          // YYYY-MM-DD
+  articlesRead: number;  // distinct articles with any session this day
+  durationMs: number;    // total reading time
+  articleIds: string[];  // for de-dupe
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'ai';
+  text: string;
+  createdAt: string;
+}
+
+export interface ChatThread {
+  id: string;
+  title: string;
+  messages: ChatMessage[];
+  createdAt: string;
   updatedAt: string;
 }

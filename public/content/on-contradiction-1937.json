@@ -60,6 +60,11 @@
           "text": "这个辩证法的宇宙观，主要地就是教导人们要善于去观察和分析各种事物的矛盾的运动，并根据这种分析，指出解决矛盾的方法。因此，具体地了解事物矛盾这一个法则，对于我们是非常重要的。"
         },
         {
+          "id": "oc-h115",
+          "kind": "heading",
+          "text": "一、矛盾的普遍性"
+        },
+        {
           "id": "oc-010",
           "text": "为了叙述的便利起见，我在这里先说矛盾的普遍性，再说矛盾的特殊性。这是因为马克思主义的伟大的创造者和继承者马克思、恩格斯、列宁、斯大林他们发现了唯物辩证法的宇宙观，已经把唯物辩证法应用在人类历史的分析和自然历史的分析的许多方面，应用在社会的变革和自然的变革（例如在苏联）的许多方面，获得了极其伟大的成功，矛盾的普遍性已经被很多人所承认，因此，关于这个问题只需要很少的话就可以说明白；而关于矛盾的特殊性的问题，则还有很多的同志，特别是教条主义者，弄不清楚。他们不了解矛盾的普遍性即寓于矛盾的特殊性之中。他们也不了解研究当前具体事物的矛盾的特殊性，对于我们指导革命实践的发展有何等重要的意义。因此，关于矛盾的特殊性的问题应当着重地加以研究，并用足够的篇幅加以说明。为了这个缘故，当着我们分析事物矛盾的法则的时候，我们就先来分析矛盾的普遍性的问题，然后再着重地分析矛盾的特殊性的问题，最后仍归到矛盾的普遍性的问题。"
         },
@@ -130,6 +135,11 @@
         {
           "id": "oc-027",
           "text": "新过程的发生是什么呢？这是旧的统一和组成此统一的对立成分让位于新的统一和组成此统一的对立成分，于是新过程就代替旧过程而发生。旧过程完结了，新过程发生了。新过程又包含着新矛盾，开始它自己的矛盾发展史。"
+        },
+        {
+          "id": "oc-h114",
+          "kind": "heading",
+          "text": "二、矛盾的特殊性"
         },
         {
           "id": "oc-028",
@@ -340,6 +350,11 @@
           "text": "列宁说：“辩证法是这样的一种学说：它研究对立怎样能够是同一的，又怎样成为同一的（怎样变成同一的），——在怎样的条件之下它们互相转化，成为同一的，——为什么人的头脑不应当把这些对立看作死的、凝固的东西，而应当看作生动的、有条件的、可变动的、互相转化的东西。”（26）"
         },
         {
+          "id": "oc-h113",
+          "kind": "heading",
+          "text": "三、主要矛盾和主要的矛盾方面"
+        },
+        {
           "id": "oc-080",
           "text": "列宁这段话是什么意思呢？"
         },
@@ -382,6 +397,11 @@
         {
           "id": "oc-090",
           "text": "一切矛盾着的东西，互相联系着，不但在一定条件之下共处于一个统一体中，而且在一定条件之下互相转化，这就是矛盾的同一性的全部意义。列宁所谓“怎样成为同一的（怎样变成同一的），——在怎样的条件之下它们互相转化，成为同一的”，就是这个意思。"
+        },
+        {
+          "id": "oc-h112",
+          "kind": "heading",
+          "text": "四、矛盾诸方面的同一性和斗争性"
         },
         {
           "id": "oc-091",
@@ -518,6 +538,11 @@
           "text": "On Contradiction"
         },
         {
+          "id": "oc-h115",
+          "kind": "heading",
+          "text": "一、矛盾的普遍性"
+        },
+        {
           "id": "oc-010",
           "text": "On Contradiction"
         },
@@ -588,6 +613,11 @@
         {
           "id": "oc-027",
           "text": "In studying the law, therefore, we cannot but touch upon a wide range of problems, upon a number of philosophical questions. If we can get a clear understanding of all these problems, we shall have a fundamental grasp of materialist dialectics. These problems will be discussed in the following chapters. Here I shall only explain the opposition between the dialectical world outlook and the metaphysical world outlook, a question of primary importance."
+        },
+        {
+          "id": "oc-h114",
+          "kind": "heading",
+          "text": "二、矛盾的特殊性"
         },
         {
           "id": "oc-028",
@@ -798,6 +828,11 @@
           "text": "The dialectical world outlook, on the contrary, holds that things are in constant motion and change, and that the cause of such change is internal. It arose in ancient times, both in China and in Europe, but the ancient dialecticians were spontaneous and naive, and could not, given the social and historical conditions of their time, give a complete and coherent theory; later, they were replaced by metaphysics. Eighteenth-century European materialist philosophers like Bacon and Locke transferred the metaphysical mode of thinking from the natural sciences into philosophy, becoming the characteristic limitation of the philosophy of that period."
         },
         {
+          "id": "oc-h113",
+          "kind": "heading",
+          "text": "三、主要矛盾和主要的矛盾方面"
+        },
+        {
           "id": "oc-080",
           "text": "The dialectical world outlook, on the contrary, holds that things are in constant motion and change, and that the cause of such change is internal. It arose in ancient times, both in China and in Europe, but the ancient dialecticians were spontaneous and naive, and could not, given the social and historical conditions of their time, give a complete and coherent theory; later, they were replaced by metaphysics. Eighteenth-century European materialist philosophers like Bacon and Locke transferred the metaphysical mode of thinking from the natural sciences into philosophy, becoming the characteristic limitation of the philosophy of that period."
         },
@@ -840,6 +875,11 @@
         {
           "id": "oc-090",
           "text": "The Universality of Contradiction"
+        },
+        {
+          "id": "oc-h112",
+          "kind": "heading",
+          "text": "四、矛盾诸方面的同一性和斗争性"
         },
         {
           "id": "oc-091",

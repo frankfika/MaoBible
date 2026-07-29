@@ -5,20 +5,33 @@ import { ARTICLES } from '@/data/manifest';
 import type { ArticleMetadata } from '@/types';
 
 /**
- * Ask page — "what should I read for my situation?"
- * Mobile-friendly: big touch input, simple result cards.
+ * Discover — 发现. Situation-based search + theme grid.
+ * Replaces old Ask. The "问一件事，找一篇" experience.
  */
-export function Ask() {
+export function Discover() {
   const [query, setQuery] = useState('');
   const results = useMemo(() => matchArticles(query), [query]);
 
+  const themes = useMemo(() => {
+    const map = new Map<string, ArticleMetadata[]>();
+    for (const a of ARTICLES) {
+      for (const t of a.themes) {
+        if (!map.has(t)) map.set(t, []);
+        map.get(t)!.push(a);
+      }
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 12);
+  }, []);
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
-      <header className="pb-5 sm:pb-6">
+    <div className="max-w-3xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
+      <header className="pb-3 sm:pb-4">
         <h1 className="font-serif-cn text-2xl sm:text-3xl font-medium text-ink dark:text-dark-ink">
           问一件事，找一篇。
         </h1>
-        <p className="mt-1.5 text-xs sm:text-sm text-secondary dark:text-dark-secondary">
+        <p className="mt-1 text-xs sm:text-sm text-secondary dark:text-dark-secondary">
           输入你正在想的事 / 正在做的事。匹配最贴近的篇章。
         </p>
       </header>
@@ -72,6 +85,31 @@ export function Ask() {
           </p>
         )}
       </div>
+
+      {!query && (
+        <section className="mt-8">
+          <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-3 tracking-wider">
+            按主题浏览
+          </h2>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {themes.map(([theme, articles]) => (
+              <li key={theme}>
+                <Link
+                  to={`/ai?theme=${encodeURIComponent(theme)}`}
+                  className="block rounded-card border border-ink/8 dark:border-dark-line
+                             bg-white/50 dark:bg-dark-ink/5 p-3
+                             hover:border-cinnabar/40 active:scale-[0.99] transition-all"
+                >
+                  <p className="font-serif-cn text-sm text-ink dark:text-dark-ink">{theme}</p>
+                  <p className="mt-1 text-[10px] text-secondary dark:text-dark-secondary">
+                    {articles.length} 篇
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
@@ -86,12 +124,10 @@ function matchArticles(query: string): ScoredArticle[] {
   const q = query.trim();
   if (!q) return [];
   const qLower = q.toLowerCase();
-
   const scored: ScoredArticle[] = [];
   for (const article of ARTICLES) {
     const matched: string[] = [];
     let score = 0;
-
     for (const s of article.situations ?? []) {
       const sLower = s.toLowerCase();
       if (qLower === sLower) {
@@ -110,7 +146,6 @@ function matchArticles(query: string): ScoredArticle[] {
         }
       }
     }
-
     if (article.interpretation) {
       const iLower = article.interpretation.toLowerCase();
       const qTokens = tokenize(qLower);
@@ -118,16 +153,9 @@ function matchArticles(query: string): ScoredArticle[] {
       const overlap = qTokens.filter((t) => iTokens.includes(t)).length;
       score += overlap * 2;
     }
-
-    if (article.title.toLowerCase().includes(qLower)) {
-      score += 1;
-    }
-
-    if (score > 0) {
-      scored.push({ article, matchedSituations: matched.slice(0, 2), score });
-    }
+    if (article.title.toLowerCase().includes(qLower)) score += 1;
+    if (score > 0) scored.push({ article, matchedSituations: matched.slice(0, 2), score });
   }
-
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 8);
 }

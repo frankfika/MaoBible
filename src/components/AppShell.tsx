@@ -1,9 +1,13 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { Header } from './Header';
 
-/**
- * App shell — header + main + bottom tab bar with iOS safe-area inset.
- */
+const TABS: { to: string; label: string; icon: string; end?: boolean }[] = [
+  { to: '/', label: '书架', icon: '📚', end: true },
+  { to: '/ai', label: '解读', icon: '🤖' },
+  { to: '/discover', label: '发现', icon: '🔍' },
+  { to: '/me', label: '我', icon: '👤' },
+];
+
 export function AppShell() {
   return (
     <div className="h-screen flex flex-col">
@@ -16,12 +20,6 @@ export function AppShell() {
   );
 }
 
-const TABS = [
-  { to: '/', label: '看', icon: '📖' },
-  { to: '/ask', label: '问', icon: '🔍' },
-  { to: '/me', label: '我', icon: '☰' },
-] as const;
-
 function BottomNav() {
   return (
     <nav
@@ -29,12 +27,12 @@ function BottomNav() {
                  border-t border-ink/8 dark:border-dark-line
                  pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="max-w-3xl mx-auto h-14 grid grid-cols-3">
+      <div className="max-w-3xl mx-auto h-14 grid grid-cols-4">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
             to={tab.to}
-            end={tab.to === '/'}
+            end={tab.end}
             className={({ isActive }) =>
               [
                 'flex flex-col items-center justify-center gap-0.5 transition-colors duration-180 min-h-[44px]',

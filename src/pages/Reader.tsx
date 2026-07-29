@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useArticle } from '@/hooks/useArticle';
 import { useContentLang } from '@/hooks/useContentLang';
 import {
@@ -9,18 +9,27 @@ import {
   clearBookmark,
   getReadingProgress,
   setReadingProgress,
+  recordSession,
 } from '@/lib/storage';
 import { ARTICLES } from '@/data/manifest';
 import { ParagraphView } from '@/components/ParagraphView';
-import type { LangCode } from '@/types';
+import { TopProgressBar } from '@/components/TopProgressBar';
+import { TocDrawer } from '@/components/TocDrawer';
+import { ParagraphAIDialog } from '@/components/ParagraphAIDialog';
+import { explainParagraph } from '@/services/ai';
+import type { LangCode, Paragraph } from '@/types';
 
 type Mode = 'single' | 'bilingual';
 
 /**
- * Reader — title + paragraphs + sticky toolbar.
- * Mobile-friendly: toolbar uses 44px touch targets, scrolls with content.
- * Interpretation toggle reveals the modern one-liner; bilingual toggle
- * adds an English column on md+ screens, stacks on mobile.
+ * Reader v4 — title + AI 解读 + paragraphs + sticky toolbar.
+ *
+ * v4 changes from v3:
+ *  - Top progress bar (auto-updates with scroll)
+ *  - AI 解读 panel DEFAULT EXPANDED (interpretation visible from start)
+ *  - TOC drawer (slide-up sheet with all paragraphs)
+ *  - 段落点击 → AI 解释 dialog
+ *  - Reading session recorded (durationMs tracked)
  */
 export function Reader() {
   const { id = '' } = useParams<{ id: string }>();
@@ -29,9 +38,12 @@ export function Reader() {
   const [contentLang, setContentLang] = useContentLang();
   const [mode, setMode] = useState<Mode>('single');
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [showInterpretation, setShowInterpretation] = useState(false);
+  const [showAI, setShowAI] = useState(true);
+  const [showToc, setShowToc] = useState(false);
+  const [aiParagraph, setAiParagraph] = useState<Paragraph | null>(null);
   const articleRef = useRef<HTMLElement | null>(null);
   const lastSaveRef = useRef(0);
+  const sessionStartRef = useRef<number>(Date.now());
 
   const meta = article?.metadata;
   const currentIndex = useMemo(
@@ -47,6 +59,18 @@ export function Reader() {
   useEffect(() => {
     if (!id) return;
     void getBookmark(id).then((b) => setIsBookmarked(Boolean(b)));
+    sessionStartRef.current = Date.now();
+    return () => {
+      // Record session on unmount
+      const durationMs = Date.now() - sessionStartRef.current;
+      if (durationMs > 5_000) {
+        void recordSession({
+          articleId: id,
+          startedAt: new Date(sessionStartRef.current).toISOString(),
+          durationMs,
+        });
+      }
+    };
   }, [id]);
 
   useEffect(() => {
@@ -69,10 +93,21 @@ export function Reader() {
         el.scrollHeight > el.clientHeight
           ? el.scrollTop / (el.scrollHeight - el.clientHeight)
           : 0;
+      // Find which paragraph is currently at the top
+      const paragraphs = el.querySelectorAll<HTMLElement>('[data-para-id]');
+      let activeId: string | undefined;
+      for (const p of paragraphs) {
+        const rect = p.getBoundingClientRect();
+        if (rect.top >= 100) {
+          activeId = p.dataset.paraId;
+          break;
+        }
+      }
       void setReadingProgress({
         articleId: id,
         scrollFraction: frac,
         updatedAt: new Date().toISOString(),
+        lastParagraphId: activeId,
       });
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -120,7 +155,10 @@ export function Reader() {
 
   return (
     <article ref={articleRef} className="max-w-3xl mx-auto px-4 sm:px-8 py-3 pb-8">
-      {/* Sticky toolbar — compact, 44px touch targets, mobile-friendly */}
+      {/* Top progress bar — fixed to top of viewport */}
+      <TopProgressBar containerRef={articleRef} />
+
+      {/* Sticky toolbar */}
       <div
         className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 py-1.5
                    backdrop-blur-md bg-paper/85 dark:bg-dark-paper/85
@@ -136,6 +174,15 @@ export function Reader() {
         >
           <span className="text-lg">←</span>
         </button>
+        <button
+          onClick={() => setShowToc(true)}
+          className="min-h-[36px] px-2 rounded-card text-xs text-secondary dark:text-dark-secondary
+                     border border-ink/10 dark:border-dark-line
+                     hover:border-cinnabar/40 active:scale-95 transition-all"
+          title="目录"
+        >
+          ☰ 目录
+        </button>
         <div className="flex-1 min-w-0" />
         <ToolbarButton
           label={contentLang === 'zh-CN' ? '中' : 'EN'}
@@ -150,10 +197,10 @@ export function Reader() {
           title="双语对照"
         />
         <ToolbarButton
-          label="解读"
-          active={showInterpretation}
-          onClick={() => setShowInterpretation((s) => !s)}
-          title="解读"
+          label="AI"
+          active={showAI}
+          onClick={() => setShowAI((s) => !s)}
+          title="AI 解读"
         />
         <ToolbarButton
           label={isBookmarked ? '★' : '☆'}
@@ -178,21 +225,47 @@ export function Reader() {
         </p>
       </header>
 
-      {showInterpretation && meta?.interpretation && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="mb-4"
-        >
-          <div className="rounded-card-lg border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 px-4 py-3">
-            <div className="text-[11px] text-cinnabar/80 mb-1 tracking-wider">解读</div>
-            <p className="text-base text-ink dark:text-dark-ink font-serif-cn leading-relaxed">
-              {meta.interpretation}
-            </p>
-          </div>
-        </motion.div>
-      )}
+      {/* AI 解读 — default expanded */}
+      <AnimatePresence>
+        {showAI && meta?.interpretation && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="mb-4"
+          >
+            <div className="rounded-card-lg border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 px-4 py-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-[11px] text-cinnabar/80 tracking-wider flex items-center gap-1">
+                  <span>🤖</span> AI 解读
+                </div>
+                <button
+                  onClick={() => setShowAI(false)}
+                  className="text-[10px] text-secondary hover:text-cinnabar transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center"
+                  aria-label="关闭解读"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-[15px] sm:text-base text-ink dark:text-dark-ink font-serif-cn leading-relaxed">
+                {meta.interpretation}
+              </p>
+              <Link
+                to="/ai"
+                className="mt-2 inline-block text-[11px] sm:text-xs text-cinnabar/85 hover:text-cinnabar transition-colors"
+              >
+                问 AI 更多 →
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hint about AI paragraph tap */}
+      <p className="mb-2 text-[10px] sm:text-xs text-secondary dark:text-dark-secondary italic">
+        💡 点段落 → AI 解释
+      </p>
 
       <div
         className={
@@ -209,7 +282,12 @@ export function Reader() {
           }
         >
           {primary?.paragraphs.map((p) => (
-            <ParagraphView key={p.id} p={p} lang={contentLang} />
+            <ParagraphView
+              key={p.id}
+              p={p}
+              lang={contentLang}
+              onTap={contentLang === 'zh-CN' ? () => setAiParagraph(p) : undefined}
+            />
           ))}
         </section>
         {mode === 'bilingual' && secondary && (
@@ -247,6 +325,27 @@ export function Reader() {
           <div className="flex-1" />
         )}
       </nav>
+
+      {/* TOC drawer */}
+      <TocDrawer
+        open={showToc}
+        onClose={() => setShowToc(false)}
+        article={article}
+        contentLang={contentLang}
+        onJump={(paraId) => {
+          const el = articleRef.current?.querySelector<HTMLElement>(
+            `[data-para-id="${paraId}"]`,
+          );
+          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+      />
+
+      {/* AI 解释 dialog for a paragraph */}
+      <ParagraphAIDialog
+        paragraph={aiParagraph}
+        onClose={() => setAiParagraph(null)}
+        explain={explainParagraph}
+      />
     </article>
   );
 }

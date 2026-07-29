@@ -1,9 +1,19 @@
 import type { Paragraph, LangCode } from '@/types';
 
 /**
- * Simple paragraph renderer — just typography. No popover, no notes.
+ * Simple paragraph renderer — typography + optional tap handler.
+ * Tap → AI 解释 dialog (only for Chinese paragraphs, since the LLM
+ * is currently trained on Chinese interpretation).
  */
-export function ParagraphView({ p, lang }: { p: Paragraph; lang: LangCode }) {
+export function ParagraphView({
+  p,
+  lang,
+  onTap,
+}: {
+  p: Paragraph;
+  lang: LangCode;
+  onTap?: () => void;
+}) {
   if (p.kind === 'heading') {
     return (
       <h2
@@ -18,6 +28,7 @@ export function ParagraphView({ p, lang }: { p: Paragraph; lang: LangCode }) {
   return (
     <p
       data-para-id={p.id}
+      onClick={onTap}
       className={
         lang === 'zh-CN'
           ? 'para-zh text-[15px] sm:text-base my-3 sm:my-4 leading-7 sm:leading-8'
