@@ -22,11 +22,11 @@ export function TopProgressBar({ containerRef }: { containerRef: RefObject<HTMLE
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 h-[2px] z-30 pointer-events-none"
+      className="fixed top-0 left-0 right-0 h-[3px] z-[60] pointer-events-none"
       aria-hidden
     >
       <div
-        className="h-full bg-cinnabar transition-[width] duration-75"
+        className="h-full bg-cinnabar shadow-[0_0_8px_rgba(164,74,66,0.3)] transition-[width] duration-75"
         style={{ width: `${pct * 100}%` }}
       />
     </div>

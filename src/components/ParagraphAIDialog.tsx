@@ -29,6 +29,15 @@ export function ParagraphAIDialog({
       .finally(() => setLoading(false));
   }, [paragraph, explain]);
 
+  useEffect(() => {
+    if (!paragraph) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose, paragraph]);
+
   return (
     <AnimatePresence>
       {paragraph && (
@@ -46,11 +55,15 @@ export function ParagraphAIDialog({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[80vh]
+            role="dialog"
+            aria-modal="true"
+            aria-label="段落解读"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[82dvh]
                        bg-paper dark:bg-dark-paper
                        rounded-t-2xl border-t border-ink/8 dark:border-dark-line
-                       flex flex-col"
+                       flex flex-col pb-[env(safe-area-inset-bottom)]"
           >
+            <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-ink/15 dark:bg-dark-ink/20" aria-hidden />
             <div className="flex items-center justify-between px-4 py-3 border-b border-ink/8 dark:border-dark-line shrink-0">
               <h3 className="text-sm font-medium text-ink dark:text-dark-ink flex items-center gap-1.5">
                 <span>🤖</span> AI 解释

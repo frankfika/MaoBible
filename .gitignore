@@ -38,6 +38,10 @@ test-results/
 .cache/
 .turbo/
 .parcel-cache/
+*.tsbuildinfo
 
 # PWA / Build artifacts
 dev-dist/
+
+# EdgeOne local project metadata and login tokens
+.edgeone/

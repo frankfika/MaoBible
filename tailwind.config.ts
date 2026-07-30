@@ -18,7 +18,7 @@ const config: Config = {
       colors: {
         paper: '#F4F1EA',
         ink: '#22221F',
-        secondary: '#77766F',
+        secondary: '#66655F',
         moss: '#6F7868',
         cinnabar: '#A44A42',
         'dark-paper': '#191918',
@@ -27,8 +27,8 @@ const config: Config = {
         'dark-line': '#2A2A28',
       },
       fontFamily: {
-        // System first; web fonts loaded via @import in CSS
-        sans: ['"Inter"', '"Noto Sans SC"', 'system-ui', '-apple-system', 'sans-serif'],
+        // Use native Chinese UI faces; editorial serif is reserved for reading.
+        sans: ['"Avenir Next"', '"PingFang SC"', '"Hiragino Sans GB"', 'system-ui', 'sans-serif'],
         serif: ['"Source Serif 4"', '"Source Han Serif SC"', 'Georgia', 'serif'],
         // Chinese titles use a modern 宋体
         'serif-cn': [

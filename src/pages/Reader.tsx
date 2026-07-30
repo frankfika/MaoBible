@@ -58,6 +58,11 @@ export function Reader() {
       : null;
 
   useEffect(() => {
+    if (!meta?.title) return;
+    document.title = `${meta.title} · 毛选`;
+  }, [meta?.title]);
+
+  useEffect(() => {
     if (!id) return;
     void getBookmark(id).then((b) => setIsBookmarked(Boolean(b)));
     sessionStartRef.current = Date.now();
@@ -77,6 +82,30 @@ export function Reader() {
   useEffect(() => {
     if (!article || !articleRef.current) return;
     const el = articleRef.current;
+    let restored = false;
+    const saveCurrentProgress = () => {
+      if (!restored) return;
+      const frac =
+        el.scrollHeight > el.clientHeight
+          ? el.scrollTop / (el.scrollHeight - el.clientHeight)
+          : 0;
+      const paragraphs = el.querySelectorAll<HTMLElement>('[data-para-id]');
+      let activeId: string | undefined;
+      for (const p of paragraphs) {
+        const rect = p.getBoundingClientRect();
+        if (rect.bottom >= 112) {
+          activeId = p.dataset.paraId;
+          break;
+        }
+      }
+      void setReadingProgress({
+        articleId: id,
+        scrollFraction: Math.max(0, Math.min(1, frac)),
+        updatedAt: new Date().toISOString(),
+        lastParagraphId: activeId,
+      });
+    };
+
     void getReadingProgress(id).then((p) => {
       if (p) {
         const target = Math.max(
@@ -85,34 +114,26 @@ export function Reader() {
         );
         el.scrollTo({ top: target, behavior: 'auto' });
       }
+      restored = true;
     });
     const onScroll = () => {
       const now = Date.now();
       if (now - lastSaveRef.current < 1000) return;
       lastSaveRef.current = now;
-      const frac =
-        el.scrollHeight > el.clientHeight
-          ? el.scrollTop / (el.scrollHeight - el.clientHeight)
-          : 0;
-      // Find which paragraph is currently at the top
-      const paragraphs = el.querySelectorAll<HTMLElement>('[data-para-id]');
-      let activeId: string | undefined;
-      for (const p of paragraphs) {
-        const rect = p.getBoundingClientRect();
-        if (rect.top >= 100) {
-          activeId = p.dataset.paraId;
-          break;
-        }
-      }
-      void setReadingProgress({
-        articleId: id,
-        scrollFraction: frac,
-        updatedAt: new Date().toISOString(),
-        lastParagraphId: activeId,
-      });
+      saveCurrentProgress();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') saveCurrentProgress();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
+    window.addEventListener('pagehide', saveCurrentProgress);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      saveCurrentProgress();
+      el.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pagehide', saveCurrentProgress);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [article, id]);
 
   // Hash-based jump from Discover page: /read/{id}#{paragraphId} → scroll
@@ -191,13 +212,18 @@ export function Reader() {
   };
 
   return (
-    <article ref={articleRef} className="max-w-3xl mx-auto px-4 sm:px-8 py-3 pb-8">
+    <article
+      ref={articleRef}
+      className="app-surface h-full overflow-y-auto overscroll-y-contain
+                 max-w-3xl mx-auto px-4 sm:px-8 pb-[calc(2rem+env(safe-area-inset-bottom))]"
+    >
       {/* Top progress bar — fixed to top of viewport */}
       <TopProgressBar containerRef={articleRef} />
 
       {/* Sticky toolbar */}
       <div
-        className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 py-1.5
+        className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 pb-1.5
+                   pt-[calc(.375rem+env(safe-area-inset-top))]
                    backdrop-blur-md bg-paper/85 dark:bg-dark-paper/85
                    border-b border-ink/5 dark:border-dark-line
                    flex items-center gap-1"
@@ -248,8 +274,8 @@ export function Reader() {
         />
       </div>
 
-      <header className="pt-2 sm:pt-4 pb-3 sm:pb-4">
-        <h1 className="font-serif-cn text-xl sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight">
+      <header className="pt-4 sm:pt-6 pb-4 sm:pb-5">
+        <h1 className="font-serif-cn text-[1.65rem] sm:text-3xl font-medium text-ink dark:text-dark-ink leading-tight text-balance">
           {meta?.title}
         </h1>
         {meta?.subtitle && (
@@ -300,8 +326,8 @@ export function Reader() {
       </AnimatePresence>
 
       {/* Hint about AI paragraph tap */}
-      <p className="mb-2 text-[10px] sm:text-xs text-secondary dark:text-dark-secondary italic">
-        💡 点段落 → AI 解释
+      <p className="mb-3 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
+        点按带虚线提示的段落，可查看白话解读
       </p>
 
       <div

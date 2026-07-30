@@ -10,6 +10,7 @@ import {
 import type { Bookmark, ReadingProgress, DailyStats } from '@/types';
 import { useContentLang } from '@/hooks/useContentLang';
 import { ContentLangToggle } from '@/components/ContentLangToggle';
+import { InstallAppCard } from '@/components/InstallAppCard';
 
 /**
  * Me — 我. Reading stats + history + bookmarks + settings.
@@ -60,6 +61,13 @@ export function Me() {
           我的
         </h1>
       </header>
+
+      <section>
+        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
+          手机应用
+        </h2>
+        <InstallAppCard />
+      </section>
 
       {/* 本周阅读 */}
       <section>

@@ -1,5 +1,16 @@
 {
   "app": {
     "name": "MaoBible"
+  },
+  "nav": {
+    "theme": "Display theme"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "reader": {
+    "languageSwitch": "Content language"
   }
 }

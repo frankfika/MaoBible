@@ -25,15 +25,35 @@ export function ParagraphView({
       </h2>
     );
   }
+
+  const textClass =
+    lang === 'zh-CN'
+      ? 'para-zh text-[16px] sm:text-[17px] my-3.5 sm:my-5 leading-[1.9] sm:leading-[2]'
+      : 'para-en text-[15px] sm:text-base my-3.5 sm:my-5 leading-[1.75] sm:leading-[1.85]';
+
+  if (onTap) {
+    return (
+      <button
+        type="button"
+        data-para-id={p.id}
+        onClick={onTap}
+        className={[
+          textClass,
+          'block w-full text-left rounded-lg border-b border-dashed border-cinnabar/20',
+          'px-1 -mx-1 transition-colors hover:bg-cinnabar/[0.04] active:bg-cinnabar/[0.07]',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar/60',
+        ].join(' ')}
+        aria-label={`解读段落：${p.text.slice(0, 24)}`}
+      >
+        {p.text}
+      </button>
+    );
+  }
+
   return (
     <p
       data-para-id={p.id}
-      onClick={onTap}
-      className={
-        lang === 'zh-CN'
-          ? 'para-zh text-[15px] sm:text-base my-3 sm:my-4 leading-7 sm:leading-8'
-          : 'para-en text-sm sm:text-base my-3 sm:my-4 leading-6 sm:leading-7'
-      }
+      className={textClass}
     >
       {p.text}
     </p>

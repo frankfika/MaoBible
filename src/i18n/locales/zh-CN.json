@@ -1,5 +1,16 @@
 {
   "app": {
     "name": "毛选"
+  },
+  "nav": {
+    "theme": "显示主题"
+  },
+  "theme": {
+    "light": "浅色",
+    "dark": "深色",
+    "system": "跟随系统"
+  },
+  "reader": {
+    "languageSwitch": "内容语言"
   }
 }

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Article, LangCode } from '@/types';
 
@@ -21,6 +22,15 @@ export function TocDrawer({
   onJump: (paragraphId: string) => void;
 }) {
   const t = article.translations[contentLang];
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onClose, open]);
+
   if (!t) return null;
 
   // Group consecutive headings together as a section
@@ -53,11 +63,15 @@ export function TocDrawer({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[80vh]
+            role="dialog"
+            aria-modal="true"
+            aria-label="文章目录"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[82dvh]
                        bg-paper dark:bg-dark-paper
                        rounded-t-2xl border-t border-ink/8 dark:border-dark-line
-                       overflow-hidden flex flex-col"
+                       overflow-hidden flex flex-col pb-[env(safe-area-inset-bottom)]"
           >
+            <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-ink/15 dark:bg-dark-ink/20" aria-hidden />
             <div className="flex items-center justify-between px-4 py-3 border-b border-ink/8 dark:border-dark-line shrink-0">
               <h3 className="font-serif-cn text-base text-ink dark:text-dark-ink">
                 目录 · {t.paragraphs.length} 段

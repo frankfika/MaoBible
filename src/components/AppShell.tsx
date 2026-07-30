@@ -1,18 +1,53 @@
-import { Outlet, NavLink } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 
-const TABS: { to: string; label: string; icon: string; end?: boolean }[] = [
-  { to: '/', label: '书架', icon: '📚', end: true },
-  { to: '/ai', label: '解读', icon: '🤖' },
-  { to: '/discover', label: '发现', icon: '🔍' },
-  { to: '/me', label: '我', icon: '👤' },
+type IconName = 'shelf' | 'ask' | 'person';
+
+const TABS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
+  { to: '/', label: '书架', icon: 'shelf', end: true },
+  { to: '/ask', label: '回应', icon: 'ask' },
+  { to: '/me', label: '我', icon: 'person' },
 ];
 
 export function AppShell() {
+  const { pathname } = useLocation();
+  const isReader = pathname.startsWith('/read/');
+
+  useEffect(() => {
+    if (isReader) return;
+    const pageNames: Record<string, string> = {
+      '/': '书架',
+      '/ask': '回应',
+      '/me': '我的',
+    };
+    document.title = `${pageNames[pathname] ?? '书架'} · 毛选`;
+  }, [isReader, pathname]);
+
+  if (isReader) {
+    return (
+      <main id="main-content" className="h-dvh min-h-0 overflow-hidden">
+        <Outlet />
+      </main>
+    );
+  }
+
   return (
-    <div className="h-screen flex flex-col">
+    <div className="app-surface h-dvh min-h-0 flex flex-col overflow-hidden">
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-card
+                   bg-ink px-3 py-2 text-sm text-paper shadow-lg transition-transform
+                   focus:translate-y-0 dark:bg-dark-ink dark:text-dark-paper"
+      >
+        跳到主要内容
+      </a>
       <Header />
-      <main className="flex-1 min-h-0 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main
+        id="main-content"
+        className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain
+                   pb-[calc(4.75rem+env(safe-area-inset-bottom))]"
+      >
         <Outlet />
       </main>
       <BottomNav />
@@ -23,11 +58,12 @@ export function AppShell() {
 function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md bg-paper/92 dark:bg-dark-paper/92
-                 border-t border-ink/8 dark:border-dark-line
+      aria-label="主要导航"
+      className="fixed bottom-0 left-0 right-0 z-30 backdrop-blur-xl bg-paper/94 dark:bg-dark-paper/94
+                 border-t border-ink/8 dark:border-dark-line shadow-[0_-12px_32px_rgba(34,34,31,0.04)]
                  pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="max-w-3xl mx-auto h-14 grid grid-cols-4">
+      <div className="max-w-3xl mx-auto h-[3.75rem] grid grid-cols-3 px-2">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
@@ -35,20 +71,72 @@ function BottomNav() {
             end={tab.end}
             className={({ isActive }) =>
               [
-                'flex flex-col items-center justify-center gap-0.5 transition-colors duration-180 min-h-[44px]',
+                'relative flex flex-col items-center justify-center gap-1 rounded-card',
+                'transition-colors duration-180 min-h-[48px] touch-manipulation',
                 isActive
                   ? 'text-cinnabar'
                   : 'text-ink/55 dark:text-dark-ink/55 hover:text-ink dark:hover:text-dark-ink',
               ].join(' ')
             }
           >
-            <span className="text-lg leading-none">{tab.icon}</span>
-            <span className="text-[10px] font-medium leading-none mt-0.5">
+            {({ isActive }) => (
+              <>
+                <span
+                  className={[
+                    'absolute top-0 h-0.5 w-7 rounded-full bg-cinnabar transition-all duration-220',
+                    isActive ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-50',
+                  ].join(' ')}
+                  aria-hidden
+                />
+                <NavIcon name={tab.icon} />
+                <span className="text-[10px] font-medium leading-none">
               {tab.label}
-            </span>
+                </span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>
     </nav>
+  );
+}
+
+function NavIcon({ name }: { name: IconName }) {
+  const common = {
+    width: 21,
+    height: 21,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+
+  if (name === 'shelf') {
+    return (
+      <svg {...common}>
+        <path d="M4.5 5.25A2.25 2.25 0 0 1 6.75 3H11v16H6.75A2.25 2.25 0 0 0 4.5 21V5.25Z" />
+        <path d="M19.5 5.25A2.25 2.25 0 0 0 17.25 3H13v16h4.25a2.25 2.25 0 0 1 2.25 2V5.25Z" />
+      </svg>
+    );
+  }
+  if (name === 'ask') {
+    return (
+      <svg {...common}>
+        {/* Chat bubble with a sprout/leaf — the "AI responds to you" vibe */}
+        <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8A2.5 2.5 0 0 1 17.5 17H10l-4 3.5V17H6.5A2.5 2.5 0 0 1 4 14.5v-8Z" />
+        <path d="M9 9.5c0-.7.5-1.2 1.2-1.2" />
+        <path d="M12 9.5c0-.7.5-1.2 1.2-1.2" />
+        <path d="M9.5 12.4c.5.4 1.4.7 2.3.7s1.8-.3 2.3-.7" />
+      </svg>
+    );
+  }
+  return (
+    <svg {...common}>
+      <circle cx="12" cy="8" r="3.25" />
+      <path d="M5.25 21a6.75 6.75 0 0 1 13.5 0" />
+    </svg>
   );
 }

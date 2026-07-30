@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -25,12 +25,18 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background: #F4F1EA;
+    overscroll-behavior: none;
   }
 
   body {
     @apply bg-paper text-ink font-sans;
+    min-width: 320px;
+    min-height: 100dvh;
+    margin: 0;
     font-size: 16px;
     line-height: 1.65;
+    -webkit-tap-highlight-color: transparent;
   }
   @media (min-width: 640px) {
     body {
@@ -41,6 +47,29 @@
 
   body.dark {
     @apply bg-dark-paper text-dark-ink;
+  }
+
+  body.dark,
+  html:has(body.dark) {
+    background: #191918;
+  }
+
+  button,
+  a,
+  input,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  button,
+  textarea,
+  input {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid #A44A42;
+    outline-offset: 3px;
   }
 
   /* Respect user preference for reduced motion */
@@ -61,6 +90,12 @@
   .card {
     @apply rounded-card border border-ink/10 dark:border-dark-line bg-white/40 dark:bg-dark-ink/5
            transition-colors duration-220;
+  }
+
+  .app-surface {
+    background-image:
+      radial-gradient(circle at 12% -10%, rgb(164 74 66 / 0.065), transparent 28rem),
+      radial-gradient(circle at 92% 18%, rgb(111 120 104 / 0.06), transparent 24rem);
   }
 
   /* Reader body — Chinese-first reading width */
@@ -94,5 +129,9 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
   }
 }

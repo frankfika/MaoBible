@@ -33,8 +33,12 @@ export async function clearBookmark(articleId: string): Promise<void> {
 }
 
 export async function getAllBookmarks(): Promise<Bookmark[]> {
+  const bookmarkKeys = (await keys()).filter(
+    (k): k is string =>
+      typeof k === 'string' && k.startsWith(`${PREFIX}bookmark:`),
+  );
   const all = await Promise.all(
-    (await keys()).map(async (k) => get<Bookmark>(k)),
+    bookmarkKeys.map(async (k) => get<Bookmark>(k)),
   );
   return all.filter(
     (x): x is Bookmark => Boolean(x) && typeof (x as Bookmark).articleId === 'string',
@@ -54,8 +58,12 @@ export async function setReadingProgress(p: ReadingProgress): Promise<void> {
 }
 
 export async function getAllReadingProgress(): Promise<ReadingProgress[]> {
+  const progressKeys = (await keys()).filter(
+    (k): k is string =>
+      typeof k === 'string' && k.startsWith(`${PREFIX}progress:`),
+  );
   const all = await Promise.all(
-    (await keys()).map(async (k) => get<ReadingProgress>(k)),
+    progressKeys.map(async (k) => get<ReadingProgress>(k)),
   );
   return all.filter(
     (x): x is ReadingProgress =>
@@ -98,21 +106,31 @@ async function bumpDailyStats(s: ReadingSession): Promise<void> {
 }
 
 export async function getDailyStats(days: number = 14): Promise<DailyStats[]> {
+  const statsKeys = (await keys()).filter(
+    (k): k is string =>
+      typeof k === 'string' && k.startsWith(`${PREFIX}stats:`),
+  );
   const all = await Promise.all(
-    (await keys()).map(async (k) => get<DailyStats>(k)),
+    statsKeys.map(async (k) => get<DailyStats>(k)),
   );
   const stats = all.filter(
     (x): x is DailyStats =>
       Boolean(x) && typeof (x as DailyStats).date === 'string',
   );
-  return stats.slice(-days);
+  return stats
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-days);
 }
 
 /* ---------------- Chat threads ---------------- */
 
 export async function getAllChats(): Promise<ChatThread[]> {
+  const chatKeys = (await keys()).filter(
+    (k): k is string =>
+      typeof k === 'string' && k.startsWith(`${globalKey('chat')}:`),
+  );
   const all = await Promise.all(
-    (await keys()).map(async (k) => get<ChatThread>(k)),
+    chatKeys.map(async (k) => get<ChatThread>(k)),
   );
   return all
     .filter(

@@ -28,6 +28,7 @@ export async function askAI(question: string): Promise<string> {
   return callAI(
     `问: ${question}\n\n请基于参考文章库回答。如果问题跟毛选无关, 也尽量联系到毛选思想给个简短回答。`,
     SYSTEM_BRAIN,
+    () => offlineAnswer(question),
   );
 }
 
@@ -37,6 +38,8 @@ export async function explainParagraph(text: string): Promise<string> {
   return callAI(
     `原文:\n${text}\n\n请用现代白话解释这段话。`,
     system,
+    () =>
+      '当前智能解读服务暂时不可用。这段原文仍已完整保存在设备中；建议先结合前后段落阅读，稍后联网后再试白话解读。',
   );
 }
 
@@ -48,6 +51,7 @@ export async function summarizeArticle(articleId: string): Promise<string> {
   return callAI(
     `文章: 《${a.title}》(${a.writtenAt})\n主题: ${a.themes.join('/')}\n一句话解读: ${a.interpretation ?? ''}\n\n请写一段 80-150 字的现代白话摘要。`,
     system,
+    () => a.interpretation ?? a.summary ?? `《${a.title}》主要讨论${a.themes.join('、')}。`,
   );
 }
 
@@ -64,7 +68,13 @@ ${read.map((a) => `- ${a.title} (${a.themes.join('/')})`).join('\n')}
 ${unread.map((a) => `- ${a.title} (${a.themes.join('/')}): ${a.interpretation ?? a.summary ?? ''}`).join('\n')}
 
 请推荐 1 篇, 给出理由。`;
-  return callAI(prompt, system);
+  return callAI(prompt, system, () => {
+    const lastRead = read[read.length - 1];
+    const next =
+      unread.find((a) => lastRead?.themes.some((theme) => a.themes.includes(theme))) ??
+      unread[0];
+    return `建议下一篇读《${next.title}》。${next.interpretation ?? next.summary ?? `它延续了${next.themes.join('、')}这些主题。`}`;
+  });
 }
 
 export interface RecommendedParagraph {
@@ -222,8 +232,19 @@ ${catalog}`;
  * each (so the user can read the original + understand it immediately).
  */
 export async function analyzeSituation(text: string): Promise<SituationAnalysis> {
-  // Step 1: pick 1-3 articles (single LLM call)
-  const articlePicks = await pickArticles(text);
+  // Step 1: pick 1-3 articles (single LLM call). The production PWA can
+  // still provide a transparent local match when the model endpoint is absent.
+  let articlePicks: Array<{ id: string; why: string }>;
+  let offline = false;
+  try {
+    articlePicks = await pickArticles(text);
+  } catch {
+    offline = true;
+    articlePicks = matchArticlesLocally(text).map((article) => ({
+      id: article.id,
+      why: `根据“${article.themes.slice(0, 2).join('、')}”主题与你描述的处境匹配。`,
+    }));
+  }
   if (articlePicks.length === 0) {
     return { summary: 'AI 暂时没找到合适的回应, 试试换个说法?', articles: [] };
   }
@@ -233,7 +254,9 @@ export async function analyzeSituation(text: string): Promise<SituationAnalysis>
     articlePicks.map(async (pick) => {
       const article = await fetchArticle(pick.id);
       if (!article) return null;
-      const paraPicks = await pickParagraphs(text, article);
+      const paraPicks = offline
+        ? pickParagraphsLocally(text, article.paragraphs)
+        : await pickParagraphs(text, article);
       // Resolve paragraph ids → full text + modern gloss
       const paragraphs: RecommendedParagraph[] = [];
       for (const pp of paraPicks) {
@@ -241,11 +264,9 @@ export async function analyzeSituation(text: string): Promise<SituationAnalysis>
         if (!p) continue;
         // Modern gloss in parallel
         let gloss = '';
-        try {
-          gloss = await explainParagraph(p.text);
-        } catch {
-          gloss = '(AI 解释暂不可用)';
-        }
+        gloss = offline
+          ? `可从“${article.interpretation ?? article.summary ?? article.themes.join('、')}”这一主线理解；点开原文，结合上下文阅读更准确。`
+          : await explainParagraph(p.text);
         paragraphs.push({ paragraphId: p.id, whyThis: pp.whyThis, gloss });
       }
       return { id: pick.id, why: pick.why, paragraphs };
@@ -253,12 +274,18 @@ export async function analyzeSituation(text: string): Promise<SituationAnalysis>
   );
 
   return {
-    summary: `你正在面对的状态, 毛选里这 ${articlePicks.length} 篇文章里 ${articlePicks.length === 1 ? '有一段' : '有几段'}话直接回应你。`,
+    summary: offline
+      ? `智能服务暂时不可用，已用设备内的主题索引为你匹配 ${articlePicks.length} 篇文章。`
+      : `你正在面对的状态, 毛选里这 ${articlePicks.length} 篇文章里 ${articlePicks.length === 1 ? '有一段' : '有几段'}话直接回应你。`,
     articles: enriched.filter((a): a is RecommendedArticle => Boolean(a && a.paragraphs.length > 0)),
   };
 }
 
-async function callAI(prompt: string, system: string): Promise<string> {
+async function callAI(
+  prompt: string,
+  system: string,
+  fallback: () => string,
+): Promise<string> {
   try {
     const r = await fetch('/api/ai', {
       method: 'POST',
@@ -266,13 +293,100 @@ async function callAI(prompt: string, system: string): Promise<string> {
       body: JSON.stringify({ prompt, system }),
     });
     if (!r.ok) {
-      return `抱歉, AI 暂时不可用 (HTTP ${r.status})`;
+      return fallback();
     }
     const data = (await r.json()) as { text: string };
-    return data.text || '抱歉, AI 暂时不可用';
-  } catch (e) {
-    return '抱歉, AI 暂时不可用 (network error)';
+    return data.text || fallback();
+  } catch {
+    return fallback();
   }
+}
+
+const TOPIC_ALIASES: Record<string, string[]> = {
+  实践: ['实践', '行动', '执行', '落地', '理论', '学习'],
+  矛盾: ['矛盾', '冲突', '关系', '分歧', 'partner'],
+  群众: ['群众', '团队', '管理', '组织', '员工', '协作'],
+  调查: ['调查', '信息', '事实', '现状', '不清楚', '看不清'],
+  战略: ['战略', '坚持', '长期', '困难', '失败', '低谷', '项目'],
+  民主: ['民主', '人民', '权力', '制度', '国家'],
+  党建: ['党建', '作风', '整风', '文风', '官僚', '形式主义'],
+};
+
+function queryTerms(text: string): string[] {
+  const terms = new Set<string>();
+  for (const [topic, aliases] of Object.entries(TOPIC_ALIASES)) {
+    if (aliases.some((alias) => text.toLowerCase().includes(alias.toLowerCase()))) {
+      terms.add(topic);
+      aliases.forEach((alias) => terms.add(alias));
+    }
+  }
+  return [...terms];
+}
+
+function matchArticlesLocally(text: string): ArticleMetadata[] {
+  const terms = queryTerms(text);
+  const scored = ARTICLES.map((article, index) => {
+    const haystack = [
+      article.title,
+      article.summary,
+      article.interpretation,
+      ...(article.themes ?? []),
+      ...(article.situations ?? []),
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const lowerTitle = article.title.toLowerCase();
+    const lowerThemes = article.themes.join(' ').toLowerCase();
+    const lowerHaystack = haystack.toLowerCase();
+    const exactTitleBoost = text.toLowerCase().includes(lowerTitle) ? 8 : 0;
+    const score =
+      exactTitleBoost +
+      terms.reduce((sum, term) => {
+        const lowerTerm = term.toLowerCase();
+        if (lowerTitle.includes(lowerTerm)) return sum + 4;
+        if (lowerThemes.includes(lowerTerm)) return sum + 2;
+        if (lowerHaystack.includes(lowerTerm)) return sum + 1;
+        return sum;
+      }, 0);
+    return { article, score, index };
+  }).sort((a, b) => b.score - a.score || a.index - b.index);
+
+  const matched = scored.filter((item) => item.score > 0).slice(0, 3);
+  return (matched.length > 0 ? matched : scored.slice(0, 2)).map((item) => item.article);
+}
+
+function pickParagraphsLocally(
+  text: string,
+  paragraphs: Paragraph[],
+): Array<{ paragraphId: string; whyThis: string }> {
+  const terms = queryTerms(text);
+  const candidates = paragraphs
+    .filter((paragraph) => paragraph.kind !== 'heading' && paragraph.text.length > 30)
+    .map((paragraph, index) => ({
+      paragraph,
+      index,
+      score: terms.reduce(
+        (sum, term) => sum + (paragraph.text.includes(term) ? 1 : 0),
+        0,
+      ),
+    }))
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  const matched = candidates.filter((item) => item.score > 0).slice(0, 2);
+  return (matched.length > 0 ? matched : candidates.slice(0, 1)).map(({ paragraph }) => ({
+    paragraphId: paragraph.id,
+    whyThis: '这是本地主题索引找到的相关段落，建议结合上下文判断是否贴合你的处境。',
+  }));
+}
+
+function offlineAnswer(question: string): string {
+  const matches = matchArticlesLocally(question).slice(0, 2);
+  return [
+    '智能服务暂时不可用，先根据设备内的文章索引给你一个阅读方向：',
+    ...matches.map(
+      (article) =>
+        `《${article.title}》：${article.interpretation ?? article.summary ?? article.themes.join('、')}`,
+    ),
+  ].join('\n');
 }
 
 /**

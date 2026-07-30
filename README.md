@@ -8,12 +8,13 @@ A mobile-first PWA that lets you read 22 articles from the official 1991 People'
 ## Features
 
 - **📚 书架 (Shelf)** — one-screen home with continue-reading, daily pick, theme chips, 22-article grid, bookmarks
-- **🤖 解读 (AI)** — chat with a Mao-reading AI assistant + 3 tools (段落解读 / 摘要 / 推荐) + 6 preset questions
-- **🔍 发现 (Discover)** — **毛选回应你**: 用户写下当前状态, AI 两步找出**直接对应处境的毛选段落** — 处境识别 + 文章 + 段落原文 + 现代白话 + 为什么这一段对你有用. 点段落直接跳到 reader 那段.
+- **🌿 回应 (Ask)** — single AI entry with two modes:
+  - **回应** — 用户写现状, AI 两步找出**直接对应处境的毛选段落** (处境识别 + 文章 + 段落原文 + 现代白话 + 为什么对你有用, 点段落跳到 reader 那段)
+  - **问** — 问任何关于毛选的问题, 单步 RAG over 22 篇, 6 热门提问 chip, 历史对话
 - **👤 我 (Me)** — this-week reading stats with 7-day bar chart, cumulative progress, recent reading, bookmarks
 - **📖 Reader** — top progress bar, default-expanded AI 解读 panel, slide-up TOC drawer, tap any paragraph for an AI 白话 explanation
 - **🌐 Bilingual** — single-language (zh-CN | en) or paragraph-aligned bilingual mode
-- **📱 Mobile-first** — 4-tab bottom nav like 微信读书, safe-area-inset, 44px touch targets, 16px mobile typography
+- **📱 Mobile-first** — 3-tab bottom nav (书架/回应/我), safe-area-inset, 44px touch targets, 16px mobile typography
 - **🌓 Theme** — light + dark, system-aware
 - **🛜 PWA** — installable, full content cached for offline reading
 
