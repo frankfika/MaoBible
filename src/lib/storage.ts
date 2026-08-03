@@ -32,7 +32,7 @@ function globalKey(kind: string) {
 
 /* ---------------- Safe wrappers ---------------- */
 
-async function safeGet<T>(k: string): Promise<T | undefined> {
+export async function safeGet<T>(k: string): Promise<T | undefined> {
   try {
     return await get<T>(k);
   } catch (e) {
@@ -41,7 +41,7 @@ async function safeGet<T>(k: string): Promise<T | undefined> {
   }
 }
 
-async function safeSet<T>(k: string, v: T): Promise<void> {
+export async function safeSet<T>(k: string, v: T): Promise<void> {
   try {
     await set(k, v);
   } catch (e) {
@@ -49,7 +49,7 @@ async function safeSet<T>(k: string, v: T): Promise<void> {
   }
 }
 
-async function safeDel(k: string): Promise<void> {
+export async function safeDel(k: string): Promise<void> {
   try {
     await del(k);
   } catch (e) {

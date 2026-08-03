@@ -14,6 +14,7 @@ import type { Bookmark, ReadingProgress, DailyStats, ChatThread } from '@/types'
 import { useContentLang } from '@/hooks/useContentLang';
 import { ContentLangToggle } from '@/components/ContentLangToggle';
 import { InstallAppCard } from '@/components/InstallAppCard';
+import { AIConfigCard } from '@/components/AIConfigCard';
 
 const UI_LANG_KEY = 'maobible.ui-lang';
 type UILang = 'zh-CN' | 'en';
@@ -269,6 +270,22 @@ export function Me() {
           </Link>
         </section>
       )}
+
+      {/* AI 接入 (BYOK) — 单独一节, 跟"设置"分开. 用户最容易找的位置. */}
+      <section>
+        <h2 className="text-[11px] sm:text-xs font-medium text-secondary dark:text-dark-secondary mb-2.5 tracking-wider">
+          AI 接入 (BYOK)
+        </h2>
+        <div className="rounded-card-lg border border-ink/8 dark:border-dark-line
+                        bg-white/60 dark:bg-dark-ink/5 p-4">
+          <AIConfigCard />
+        </div>
+        <p className="mt-2 text-[10px] sm:text-xs text-secondary dark:text-dark-secondary leading-relaxed">
+          智能回应（AI 解读 / 处境回应 / 问）是可选项。
+          应用不会上传你的内容到任何我们运营的服务器；所有调用都直接发到你在上面选择的 provider。
+          想清除本地记录, 可以删除浏览器存储或卸载应用。
+        </p>
+      </section>
 
       {/* 设置 */}
       <section>

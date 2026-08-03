@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARTICLES } from '@/data/manifest';
 import {
   analyzeSituation,
   askAI,
+  classifyError,
   type SituationAnalysis,
 } from '@/services/ai';
 import { getAllChats, saveChat, deleteChat } from '@/lib/storage';
@@ -27,6 +28,9 @@ export function Ask() {
   const [loading, setLoading] = useState(false);
   const [stage, setStage] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<
+    'no-config' | 'unauthorized' | 'rate-limited' | 'network' | 'other' | null
+  >(null);
   const [result, setResult] = useState<SituationAnalysis | null>(null);
   const [chatAnswer, setChatAnswer] = useState<string | null>(null);
   const [chats, setChats] = useState<ChatThread[]>([]);
@@ -45,6 +49,7 @@ export function Ask() {
     const ticket = ++inflightRef.current;
     setLoading(true);
     setError(null);
+    setErrorKind(null);
     setResult(null);
     setChatAnswer(null);
     try {
@@ -56,11 +61,11 @@ export function Ask() {
         setResult(r);
       } else {
         setStage('AI 思考中…');
-        const { text: answer, isFallback } = await askAI(text);
+        const { text: answer, isFallback, reason } = await askAI(text);
         if (ticket !== inflightRef.current) return;
         setChatAnswer(answer);
         if (isFallback) {
-          setError('智能服务暂时不可用，以下是基于本机文章库的离线回应。原文阅读、收藏和阅读进度仍可正常使用。');
+          setErrorKind(reason === 'no-config' ? 'no-config' : classifyError(reason, 0));
         }
         // Save to chat history (still useful for the user to keep the Q)
         const userMsg: ChatMessage = {
@@ -87,9 +92,16 @@ export function Ask() {
         setChats((prev) => [thread, ...prev]);
         setText('');
       }
-    } catch {
+    } catch (e) {
       if (ticket === inflightRef.current) {
-        setError('智能服务暂时不可用，请稍后重试。原文阅读、收藏和阅读进度仍可正常使用。');
+        const msg = e instanceof Error ? e.message : '';
+        if (msg.includes('请到「我 → AI 配置」')) {
+          setError(msg);
+          setErrorKind('no-config');
+        } else {
+          setError('智能服务暂时不可用，请稍后重试。原文阅读、收藏和阅读进度仍可正常使用。');
+          setErrorKind('other');
+        }
       }
     } finally {
       if (ticket === inflightRef.current) {
@@ -139,6 +151,7 @@ export function Ask() {
             setResult(null);
             setChatAnswer(null);
             setError(null);
+            setErrorKind(null);
           }}
           className={[
             'flex-1 sm:flex-none px-4 py-1.5 rounded-card text-sm font-medium transition-all',
@@ -158,6 +171,7 @@ export function Ask() {
             setResult(null);
             setChatAnswer(null);
             setError(null);
+            setErrorKind(null);
           }}
           className={[
             'flex-1 sm:flex-none px-4 py-1.5 rounded-card text-sm font-medium transition-all',
@@ -243,12 +257,26 @@ export function Ask() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="mt-6 rounded-card-lg border border-secondary/30 bg-secondary/5 p-4"
+            className="mt-6 rounded-card-lg border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 p-4"
           >
-            <p className="text-[11px] text-secondary mb-1 tracking-wider">⚠ AI 后端不可用</p>
-            <p className="text-[13px] sm:text-sm text-ink/85 dark:text-dark-ink/85 leading-relaxed">
+            <p className="text-[11px] text-cinnabar mb-1 tracking-wider">
+              {errorKind === 'no-config' ? '⚠ 尚未配置 AI 接入'
+                : errorKind === 'unauthorized' ? '⚠ AI 鉴权失败'
+                : errorKind === 'rate-limited' ? '⚠ AI 配额或限流'
+                : errorKind === 'network' ? '⚠ AI 网络不可达'
+                : '⚠ AI 暂时不可用'}
+            </p>
+            <p className="text-[13px] sm:text-sm text-ink/85 dark:text-dark-ink/85 leading-relaxed whitespace-pre-wrap">
               {error}
             </p>
+            {errorKind === 'no-config' && (
+              <Link
+                to="/me"
+                className="mt-3 inline-flex min-h-[36px] items-center rounded-card bg-cinnabar px-4 text-sm text-paper hover:bg-cinnabar/90 active:scale-95 transition-all"
+              >
+                去「我」页面配置 →
+              </Link>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

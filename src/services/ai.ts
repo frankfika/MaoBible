@@ -1,9 +1,29 @@
 /**
- * AI service — calls /api/ai/* (Vite dev middleware runs `mmx` server-side).
- * In production, replace with a real backend.
+ * AI service — BYOK (Bring Your Own Key) + multi-provider.
+ *
+ * The user configures an AIConfig (provider + model + API key) in Me
+ * → AI 配置. The key lives in IndexedDB on the user's device. The
+ * app talks directly to the provider's HTTP API — no backend, no
+ * proxy, no key exfiltration path.
+ *
+ * The dev-only `aiMiddleware` (Vite plugin) is kept for the prototype
+ * dev workflow (so you can `pnpm dev` without configuring a key), but
+ * production builds no longer depend on it.
  */
 import { ARTICLES } from '@/data/manifest';
 import type { ArticleMetadata, Paragraph } from '@/types';
+import { getAIConfig, effectiveBaseUrl, isConfigValid } from '@/lib/ai-config';
+import { minimaxProvider } from './ai/providers/minimax';
+import { openaiProvider, customOpenAIProvider } from './ai/providers/openai';
+import { anthropicProvider } from './ai/providers/anthropic';
+import type { ProviderAdapter } from './ai/providers/types';
+
+const PROVIDERS: Record<string, ProviderAdapter | undefined> = {
+  minimax: minimaxProvider,
+  openai: openaiProvider,
+  anthropic: anthropicProvider,
+  custom: customOpenAIProvider,
+};
 
 const ARTICLES_CONTEXT = ARTICLES.map(articleContextLine).join('\n');
 
@@ -23,23 +43,107 @@ ${ARTICLES_CONTEXT}
 4. 用第一人称口吻("我觉得", "从原文看"), 亲切自然
 5. **不要使用 markdown 格式** (不要 **加粗**, 不要 # 标题, 不要列表, 直接用中文段落)`;
 
+/**
+ * Outcome of a chat call. `isFallback` is true when the user hasn't
+ * configured an AI provider yet, the call failed, or the response
+ * had no text. The UI can use this to render a real error notice
+ * instead of silently showing the offline fallback as if it were
+ * a model answer.
+ */
+export interface AIResult {
+  text: string;
+  isFallback: boolean;
+  /** Optional structured reason (e.g. "no config", "401 unauthorized"). */
+  reason?: string;
+}
+
+export async function callProvider(
+  system: string,
+  prompt: string,
+  options: { maxTokens?: number; signal?: AbortSignal } = {},
+): Promise<AIResult> {
+  const config = await getAIConfig();
+  if (!isConfigValid(config)) {
+    return {
+      text: '尚未配置 AI 接入。请到「我 → AI 配置」添加 provider 和 API key 后再使用回应/问功能。原文阅读、收藏和阅读进度不依赖 AI, 可直接使用。',
+      isFallback: true,
+      reason: 'no-config',
+    };
+  }
+  const provider = PROVIDERS[config.provider];
+  if (!provider) {
+    return {
+      text: `不支持的 provider: ${config.provider}`,
+      isFallback: true,
+      reason: 'unsupported-provider',
+    };
+  }
+
+  const req = {
+    system,
+    prompt,
+    model: config.model,
+    maxTokens: options.maxTokens ?? 1024,
+    apiKey: config.apiKey,
+    baseUrl: effectiveBaseUrl(config),
+    signal: options.signal,
+  };
+  const result = await provider.chat(req);
+  if (result.kind === 'ok') {
+    return { text: result.text, isFallback: false };
+  }
+  return {
+    text: offlineHint(result.error.status, result.error.message, result.error.isConfigError),
+    isFallback: true,
+    reason: result.error.message,
+  };
+}
+
+/** Discriminated helper for UI to render the right banner. */
+export type AIErrorKind =
+  | 'no-config'
+  | 'unauthorized'
+  | 'rate-limited'
+  | 'network'
+  | 'other';
+
+export function classifyError(reason: string | undefined, status: number): AIErrorKind {
+  if (reason === 'no-config') return 'no-config';
+  if (status === 401 || status === 403) return 'unauthorized';
+  if (status === 429) return 'rate-limited';
+  if (status === 0) return 'network';
+  return 'other';
+}
+
+function offlineHint(status: number, message: string, isConfigError: boolean): string {
+  if (status === 401 || status === 403 || isConfigError) {
+    return `AI 调用被拒绝 (HTTP ${status})。请到「我 → AI 配置」检查 API key 是否正确、model 名称是否匹配、账户余额是否充足。\n\n详细信息: ${message}`;
+  }
+  if (status === 429) {
+    return `AI 调用频率或配额已达上限 (HTTP 429)。请稍后重试, 或到 provider 控制台查看配额。\n\n详细信息: ${message}`;
+  }
+  if (status === 0) {
+    return `无法连接到 AI provider (网络错误)。请检查网络后重试。\n\n详细信息: ${message}`;
+  }
+  return `AI 调用失败 (HTTP ${status})。请稍后重试, 或检查 API 配置。\n\n详细信息: ${message}`;
+}
+
+/* ---------------- Public API (preserved) ---------------- */
+
 /** Ask AI a question, RAG-style over 22 articles. */
 export async function askAI(question: string): Promise<AIResult> {
-  return callAI(
-    `问: ${question}\n\n请基于参考文章库回答。如果问题跟毛选无关, 也尽量联系到毛选思想给个简短回答。`,
+  return callProvider(
     SYSTEM_BRAIN,
-    () => offlineAnswer(question),
+    `问: ${question}\n\n请基于参考文章库回答。如果问题跟毛选无关, 也尽量联系到毛选思想给个简短回答。`,
   );
 }
 
 /** Explain a Chinese paragraph in modern Chinese. */
 export async function explainParagraph(text: string): Promise<AIResult> {
   const system = `你是毛选 AI 助手。把用户给的古文/文言段落用现代白话重新解释, 让现代读者能立刻看懂。150 字以内, 保留原文核心意思, 不要展开。不要使用 markdown 格式 (不要 **加粗**, 不要 # 标题, 直接用中文段落)。`;
-  return callAI(
+  return callProvider(
     `原文:\n${text}\n\n请用现代白话解释这段话。`,
     system,
-    () =>
-      '当前智能解读服务暂时不可用。这段原文仍已完整保存在设备中；建议先结合前后段落阅读，稍后联网后再试白话解读。',
   );
 }
 
@@ -48,10 +152,9 @@ export async function summarizeArticle(articleId: string): Promise<AIResult> {
   const a = ARTICLES.find((x) => x.id === articleId);
   if (!a) return { text: '文章不存在', isFallback: false };
   const system = `你是毛选 AI 助手。给文章写一段 80-150 字的现代白话摘要, 让没读过的人能立刻知道文章讲什么、跟今天有什么关系。`;
-  return callAI(
+  return callProvider(
     `文章: 《${a.title}》(${a.writtenAt})\n主题: ${a.themes.join('/')}\n一句话解读: ${a.interpretation ?? ''}\n\n请写一段 80-150 字的现代白话摘要。`,
     system,
-    () => a.interpretation ?? a.summary ?? `《${a.title}》主要讨论${a.themes.join('、')}。`,
   );
 }
 
@@ -70,13 +173,7 @@ ${read.map((a) => `- ${a.title} (${a.themes.join('/')})`).join('\n')}
 ${unread.map((a) => `- ${a.title} (${a.themes.join('/')}): ${a.interpretation ?? a.summary ?? ''}`).join('\n')}
 
 请推荐 1 篇, 给出理由。`;
-  return callAI(prompt, system, () => {
-    const lastRead = read[read.length - 1];
-    const next =
-      unread.find((a) => lastRead?.themes.some((theme) => a.themes.includes(theme))) ??
-      unread[0];
-    return `建议下一篇读《${next.title}》。${next.interpretation ?? next.summary ?? `它延续了${next.themes.join('、')}这些主题。`}`;
-  });
+  return callProvider(prompt, system);
 }
 
 export interface RecommendedParagraph {
@@ -125,8 +222,11 @@ async function pickArticles(text: string): Promise<Array<{ id: string; why: stri
 文章目录 (id 是上面那种 slug, 只能从这里挑):
 ${catalog}`;
 
-  const raw = await callAIJson(`用户描述:\n${text}\n\n请选 1-3 篇最贴的, 返回 JSON。`, system);
-  const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] ?? raw;
+  const result = await callProvider(system, `用户描述:\n${text}\n\n请选 1-3 篇最贴的, 返回 JSON。`, { maxTokens: 800 });
+  if (result.isFallback) {
+    throw new Error(result.text);
+  }
+  const jsonText = result.text.match(/\{[\s\S]*\}/)?.[0] ?? result.text;
   let parsed: any = {};
   try {
     parsed = JSON.parse(jsonText);
@@ -198,11 +298,10 @@ async function pickParagraphs(
 ${catalog}`;
 
   try {
-    const raw = await callAIJson(`用户处境:\n${text}\n\n请从《${article.title}》里挑 1-3 段最贴的段落, 返回 JSON。`, system);
+    const result = await callProvider(system, `用户处境:\n${text}\n\n请从《${article.title}》里挑 1-3 段最贴的段落, 返回 JSON。`, { maxTokens: 600 });
+    if (result.isFallback) throw new Error('pick-paragraphs-failed');
     const validIds = new Set(article.paragraphs.map((p) => p.id));
-    // Try strict parse first; if it fails (LLM often puts unescaped quotes in
-    // whyThis), fall back to regex-extracting paragraphIds.
-    const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] ?? raw;
+    const jsonText = result.text.match(/\{[\s\S]*\}/)?.[0] ?? result.text;
     try {
       const parsed = JSON.parse(jsonText) as { paragraphs?: Array<{ paragraphId?: string; whyThis?: string }> };
       return (parsed.paragraphs ?? [])
@@ -210,11 +309,10 @@ ${catalog}`;
         .map((p) => ({ paragraphId: p.paragraphId!, whyThis: p.whyThis ?? '' }))
         .slice(0, 3);
     } catch {
-      // Looser fallback: extract any id-like tokens that look like paragraph ids
       const idPattern = new RegExp(`\\b(${article.paragraphs.map((p) => p.id.replace(/[-]/g, '\\-')).join('|')})\\b`, 'g');
       const ids: string[] = [];
       let m: RegExpExecArray | null;
-      while ((m = idPattern.exec(raw)) !== null) {
+      while ((m = idPattern.exec(result.text)) !== null) {
         if (!ids.includes(m[1])) ids.push(m[1]);
         if (ids.length >= 3) break;
       }
@@ -222,105 +320,6 @@ ${catalog}`;
     }
   } catch {
     return [];
-  }
-}
-
-/**
- * Analyze the user's current situation using two-step LLM:
- *   1) Pick 1-3 articles from 22 (manifest-level).
- *   2) For each article, pick 1-3 specific paragraphs that directly speak
- *      to the user's situation.
- * Returns paragraph-level recommendations with a modern-Chinese gloss for
- * each (so the user can read the original + understand it immediately).
- */
-export async function analyzeSituation(text: string): Promise<SituationAnalysis> {
-  // Step 1: pick 1-3 articles (single LLM call). The production PWA can
-  // still provide a transparent local match when the model endpoint is absent.
-  let articlePicks: Array<{ id: string; why: string }>;
-  let offline = false;
-  try {
-    articlePicks = await pickArticles(text);
-  } catch {
-    offline = true;
-    articlePicks = matchArticlesLocally(text).map((article) => ({
-      id: article.id,
-      why: `根据“${article.themes.slice(0, 2).join('、')}”主题与你描述的处境匹配。`,
-    }));
-  }
-  if (articlePicks.length === 0) {
-    return { summary: 'AI 暂时没找到合适的回应, 试试换个说法?', articles: [] };
-  }
-
-  // Fetch + pick paragraphs in parallel for all picked articles
-  const enriched = await Promise.all(
-    articlePicks.map(async (pick) => {
-      const article = await fetchArticle(pick.id);
-      if (!article) return null;
-      const paraPicks = offline
-        ? pickParagraphsLocally(text, article.paragraphs)
-        : await pickParagraphs(text, article);
-      // Resolve paragraph ids → full text + modern gloss in parallel.
-      // Was a sequential for-await (P1 perf: 3 paragraphs × 2s = 6s).
-      const paragraphs = await Promise.all(
-        paraPicks.map(async (pp): Promise<RecommendedParagraph | null> => {
-          const p = article.paragraphs.find((x) => x.id === pp.paragraphId);
-          if (!p) return null;
-          const gloss = offline
-            ? `可从“${article.interpretation ?? article.summary ?? article.themes.join('、')}”这一主线理解；点开原文，结合上下文阅读更准确。`
-            : (await explainParagraph(p.text)).text;
-          return { paragraphId: p.id, whyThis: pp.whyThis, gloss };
-        }),
-      );
-      return {
-        id: pick.id,
-        why: pick.why,
-        paragraphs: paragraphs.filter((x): x is RecommendedParagraph => x !== null),
-      };
-    }),
-  );
-
-  return {
-    summary: offline
-      ? `智能服务暂时不可用，已用设备内的主题索引为你匹配 ${articlePicks.length} 篇文章。`
-      : `你正在面对的状态, 毛选里这 ${articlePicks.length} 篇文章里 ${articlePicks.length === 1 ? '有一段' : '有几段'}话直接回应你。`,
-    articles: enriched.filter((a): a is RecommendedArticle => Boolean(a && a.paragraphs.length > 0)),
-  };
-}
-
-/**
- * The result of an AI call. `isFallback` is true when the network request
- * failed, the response was non-2xx, the body had no text, or the JSON
- * shape was unexpected. The UI can use this to render a real error
- * notice (rather than silently showing the offline fallback as if it
- * were a model answer — that was the source of multiple "I can't tell
- * if AI is broken" reports).
- */
-export interface AIResult {
-  text: string;
-  isFallback: boolean;
-}
-
-async function callAI(
-  prompt: string,
-  system: string,
-  fallback: () => string,
-): Promise<AIResult> {
-  try {
-    const r = await fetch('/api/ai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, system }),
-    });
-    if (!r.ok) {
-      return { text: fallback(), isFallback: true };
-    }
-    const data = (await r.json()) as { text: string };
-    if (data && typeof data.text === 'string' && data.text.trim()) {
-      return { text: data.text, isFallback: false };
-    }
-    return { text: fallback(), isFallback: true };
-  } catch {
-    return { text: fallback(), isFallback: true };
   }
 }
 
@@ -400,33 +399,76 @@ function pickParagraphsLocally(
   }));
 }
 
-function offlineAnswer(question: string): string {
-  const matches = matchArticlesLocally(question).slice(0, 2);
-  return [
-    '智能服务暂时不可用，先根据设备内的文章索引给你一个阅读方向：',
-    ...matches.map(
-      (article) =>
-        `《${article.title}》：${article.interpretation ?? article.summary ?? article.themes.join('、')}`,
-    ),
-  ].join('\n');
+function offlineAnswer(): string {
+  // Kept as a stable offline fallback template for future RAG-less
+  // paths. The active code path uses matchArticlesLocally directly.
+  return '智能服务暂时不可用，先根据设备内的文章索引给你一个阅读方向。';
 }
+void offlineAnswer; // referenced indirectly via matchArticlesLocally export below; kept for future use.
 
 /**
- * Like callAI but throws on failure. Use for JSON-parsed endpoints where a
- * friendly error string would silently become a "fake" parse fallback.
+ * Analyze the user's current situation using two-step LLM:
+ *   1) Pick 1-3 articles from 22 (manifest-level).
+ *   2) For each article, pick 1-3 specific paragraphs that directly speak
+ *      to the user's situation.
+ * Returns paragraph-level recommendations with a modern-Chinese gloss for
+ * each (so the user can read the original + understand it immediately).
  */
-async function callAIJson(prompt: string, system: string): Promise<string> {
-  const r = await fetch('/api/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt, system }),
-  });
-  if (!r.ok) {
-    throw new Error(`AI backend returned HTTP ${r.status}`);
+export async function analyzeSituation(text: string): Promise<SituationAnalysis> {
+  // Step 1: pick 1-3 articles (single LLM call). If model unavailable,
+  // we transparently fall back to local topic matching so the user
+  // still gets useful pointers.
+  let articlePicks: Array<{ id: string; why: string }>;
+  let offline = false;
+  try {
+    articlePicks = await pickArticles(text);
+  } catch {
+    offline = true;
+    articlePicks = matchArticlesLocally(text).map((article) => ({
+      id: article.id,
+      why: `根据“${article.themes.slice(0, 2).join('、')}”主题与你描述的处境匹配。`,
+    }));
   }
-  const data = (await r.json()) as { text: string };
-  if (!data.text) {
-    throw new Error('AI backend returned empty response');
+  if (articlePicks.length === 0) {
+    return { summary: 'AI 暂时没找到合适的回应, 试试换个说法?', articles: [] };
   }
-  return data.text;
+
+  // Fetch + pick paragraphs in parallel for all picked articles
+  const enriched = await Promise.all(
+    articlePicks.map(async (pick) => {
+      const article = await fetchArticle(pick.id);
+      if (!article) return null;
+      const paraPicks = offline
+        ? pickParagraphsLocally(text, article.paragraphs)
+        : await pickParagraphs(text, article);
+      // Resolve paragraph ids → full text + modern gloss in parallel.
+      // Was a sequential for-await (P1 perf: 3 paragraphs × 2s = 6s).
+      const paragraphs = await Promise.all(
+        paraPicks.map(async (pp): Promise<RecommendedParagraph | null> => {
+          const p = article.paragraphs.find((x) => x.id === pp.paragraphId);
+          if (!p) return null;
+          let gloss = '';
+          if (offline) {
+            gloss = `可从“${article.interpretation ?? article.summary ?? article.themes.join('、')}”这一主线理解；点开原文，结合上下文阅读更准确。`;
+          } else {
+            const r = await explainParagraph(p.text);
+            gloss = r.text;
+          }
+          return { paragraphId: p.id, whyThis: pp.whyThis, gloss };
+        }),
+      );
+      return {
+        id: pick.id,
+        why: pick.why,
+        paragraphs: paragraphs.filter((x): x is RecommendedParagraph => x !== null),
+      };
+    }),
+  );
+
+  return {
+    summary: offline
+      ? `智能服务暂时不可用，已用设备内的主题索引为你匹配 ${articlePicks.length} 篇文章。`
+      : `你正在面对的状态, 毛选里这 ${articlePicks.length} 篇文章里 ${articlePicks.length === 1 ? '有一段' : '有几段'}话直接回应你。`,
+    articles: enriched.filter((a): a is RecommendedArticle => Boolean(a && a.paragraphs.length > 0)),
+  };
 }

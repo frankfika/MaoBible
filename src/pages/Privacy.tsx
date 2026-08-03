@@ -121,9 +121,19 @@ export function Privacy() {
           <h2 className="font-medium">智能回应（AI）</h2>
           <p className="mt-1 text-secondary dark:text-dark-secondary">
             只有当你在「回应」或「问」页面主动提交文字时，那段输入才会被发送至
-            本应用配置的智能推理服务（Mavis / MiniMax 模型），用于生成回答。
-            智能服务不可用时，应用会自动改用本机内的主题索引给出阅读方向。
+            本应用配置的智能推理服务（BYOK，你自带 key），
+            用于生成回答。智能服务不可用时，应用会自动改用本机内的主题索引给出阅读方向。
             请勿在输入中包含身份证号、联系方式、健康、财务等敏感信息。
+          </p>
+          <p className="mt-2 text-secondary dark:text-dark-secondary">
+            本应用使用 BYOK（Bring Your Own Key）模式：你在「我 → AI 接入」中
+            选择 provider（MiniMax / OpenAI / Anthropic / 自建代理）并填入自己的 API key。
+            Key 仅保存在你本机的 IndexedDB 中，不上传到本应用运营的任何服务器；
+            你的输入和回答会直接发到你所选 provider 的 API 端点。
+            具体 provider 的数据处理政策请参阅：
+            <a href="https://www.minimaxi.com/protocol/privacy-policy" target="_blank" rel="noreferrer noopener" className="ml-1 underline decoration-cinnabar/40 hover:text-cinnabar">MiniMax</a> ·
+            <a href="https://openai.com/policies/privacy-policy" target="_blank" rel="noreferrer noopener" className="ml-1 underline decoration-cinnabar/40 hover:text-cinnabar">OpenAI</a> ·
+            <a href="https://www.anthropic.com/legal/privacy" target="_blank" rel="noreferrer noopener" className="ml-1 underline decoration-cinnabar/40 hover:text-cinnabar">Anthropic</a>。
           </p>
           <p className="mt-2 text-secondary dark:text-dark-secondary">
             智能回答由大模型生成，可能不准确；应用不会把 AI 输出作为事实背书。
