@@ -20,7 +20,7 @@
     "zh-CN": {
       "language": "zh-CN",
       "source": "《毛泽东选集》（人民出版社 1991 年第 2 版）",
-      "licenseNote": "原文来自公开的人民出版社 1991 年版《毛泽东选集》，属于官方公开内容",
+      "licenseNote": "版本来源：人民出版社 1991 年版《毛泽东选集》。权利状态待核验；公开发布前需获得必要授权。",
       "updatedAt": "2026-07-28",
       "status": "published",
       "paragraphs": [
@@ -106,9 +106,9 @@
       "language": "en",
       "translator": "Foreign Languages Press (early translation, 1950s)",
       "source": "Reviewed English draft prepared for MaoBible, 2026-07-28 (not the official Foreign Languages Press translation; the FLP Selected Works volumes remain under US copyright until 2049)",
-      "licenseNote": "English text is a reviewed translation draft, not the FLP official version. The official Mao Tse-tung Selected Works, Foreign Languages Press (1954-1977), is the standard reference but is not yet in the public domain in the United States. Use this draft with attribution to MaoBible.",
-      "updatedAt": "2026-07-28",
-      "status": "reviewed",
+      "licenseNote": "Machine translation draft (LLM-generated, not human-reviewed). Known issues: 0 empty paragraphs, 5 duplicate body paragraphs. Do not distribute until human review completes. Not the Foreign Languages Press edition (US copyright until 2049).",
+      "updatedAt": "2026-08-03",
+      "status": "draft",
       "paragraphs": [
         {
           "id": "cf-001",

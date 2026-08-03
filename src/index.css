@@ -45,12 +45,11 @@
     }
   }
 
-  body.dark {
+  /* useTheme toggles the .dark class on <html> (documentElement), so
+     we key dark variants off html.dark — body.dark never matched. */
+  html.dark body,
+  html.dark {
     @apply bg-dark-paper text-dark-ink;
-  }
-
-  body.dark,
-  html:has(body.dark) {
     background: #191918;
   }
 

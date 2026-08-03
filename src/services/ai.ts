@@ -24,7 +24,7 @@ ${ARTICLES_CONTEXT}
 5. **不要使用 markdown 格式** (不要 **加粗**, 不要 # 标题, 不要列表, 直接用中文段落)`;
 
 /** Ask AI a question, RAG-style over 22 articles. */
-export async function askAI(question: string): Promise<string> {
+export async function askAI(question: string): Promise<AIResult> {
   return callAI(
     `问: ${question}\n\n请基于参考文章库回答。如果问题跟毛选无关, 也尽量联系到毛选思想给个简短回答。`,
     SYSTEM_BRAIN,
@@ -33,7 +33,7 @@ export async function askAI(question: string): Promise<string> {
 }
 
 /** Explain a Chinese paragraph in modern Chinese. */
-export async function explainParagraph(text: string): Promise<string> {
+export async function explainParagraph(text: string): Promise<AIResult> {
   const system = `你是毛选 AI 助手。把用户给的古文/文言段落用现代白话重新解释, 让现代读者能立刻看懂。150 字以内, 保留原文核心意思, 不要展开。不要使用 markdown 格式 (不要 **加粗**, 不要 # 标题, 直接用中文段落)。`;
   return callAI(
     `原文:\n${text}\n\n请用现代白话解释这段话。`,
@@ -44,9 +44,9 @@ export async function explainParagraph(text: string): Promise<string> {
 }
 
 /** Summarize an article by id in one paragraph. */
-export async function summarizeArticle(articleId: string): Promise<string> {
+export async function summarizeArticle(articleId: string): Promise<AIResult> {
   const a = ARTICLES.find((x) => x.id === articleId);
-  if (!a) return '文章不存在';
+  if (!a) return { text: '文章不存在', isFallback: false };
   const system = `你是毛选 AI 助手。给文章写一段 80-150 字的现代白话摘要, 让没读过的人能立刻知道文章讲什么、跟今天有什么关系。`;
   return callAI(
     `文章: 《${a.title}》(${a.writtenAt})\n主题: ${a.themes.join('/')}\n一句话解读: ${a.interpretation ?? ''}\n\n请写一段 80-150 字的现代白话摘要。`,
@@ -56,10 +56,12 @@ export async function summarizeArticle(articleId: string): Promise<string> {
 }
 
 /** Recommend next article based on reading history. */
-export async function recommend(readArticleIds: string[]): Promise<string> {
+export async function recommend(readArticleIds: string[]): Promise<AIResult> {
   const read = ARTICLES.filter((a) => readArticleIds.includes(a.id));
   const unread = ARTICLES.filter((a) => !readArticleIds.includes(a.id));
-  if (unread.length === 0) return '恭喜你, 已经读完所有 22 篇!';
+  if (unread.length === 0) {
+    return { text: '恭喜你, 已经读完所有 22 篇!', isFallback: false };
+  }
   const system = `你是毛选 AI 助手。根据用户已读和未读的文章, 推荐下一篇最适合读的。50-100 字, 给出具体标题和理由。`;
   const prompt = `已读 (${read.length} 篇):
 ${read.map((a) => `- ${a.title} (${a.themes.join('/')})`).join('\n')}
@@ -257,19 +259,23 @@ export async function analyzeSituation(text: string): Promise<SituationAnalysis>
       const paraPicks = offline
         ? pickParagraphsLocally(text, article.paragraphs)
         : await pickParagraphs(text, article);
-      // Resolve paragraph ids → full text + modern gloss
-      const paragraphs: RecommendedParagraph[] = [];
-      for (const pp of paraPicks) {
-        const p = article.paragraphs.find((x) => x.id === pp.paragraphId);
-        if (!p) continue;
-        // Modern gloss in parallel
-        let gloss = '';
-        gloss = offline
-          ? `可从“${article.interpretation ?? article.summary ?? article.themes.join('、')}”这一主线理解；点开原文，结合上下文阅读更准确。`
-          : await explainParagraph(p.text);
-        paragraphs.push({ paragraphId: p.id, whyThis: pp.whyThis, gloss });
-      }
-      return { id: pick.id, why: pick.why, paragraphs };
+      // Resolve paragraph ids → full text + modern gloss in parallel.
+      // Was a sequential for-await (P1 perf: 3 paragraphs × 2s = 6s).
+      const paragraphs = await Promise.all(
+        paraPicks.map(async (pp): Promise<RecommendedParagraph | null> => {
+          const p = article.paragraphs.find((x) => x.id === pp.paragraphId);
+          if (!p) return null;
+          const gloss = offline
+            ? `可从“${article.interpretation ?? article.summary ?? article.themes.join('、')}”这一主线理解；点开原文，结合上下文阅读更准确。`
+            : (await explainParagraph(p.text)).text;
+          return { paragraphId: p.id, whyThis: pp.whyThis, gloss };
+        }),
+      );
+      return {
+        id: pick.id,
+        why: pick.why,
+        paragraphs: paragraphs.filter((x): x is RecommendedParagraph => x !== null),
+      };
     }),
   );
 
@@ -281,11 +287,24 @@ export async function analyzeSituation(text: string): Promise<SituationAnalysis>
   };
 }
 
+/**
+ * The result of an AI call. `isFallback` is true when the network request
+ * failed, the response was non-2xx, the body had no text, or the JSON
+ * shape was unexpected. The UI can use this to render a real error
+ * notice (rather than silently showing the offline fallback as if it
+ * were a model answer — that was the source of multiple "I can't tell
+ * if AI is broken" reports).
+ */
+export interface AIResult {
+  text: string;
+  isFallback: boolean;
+}
+
 async function callAI(
   prompt: string,
   system: string,
   fallback: () => string,
-): Promise<string> {
+): Promise<AIResult> {
   try {
     const r = await fetch('/api/ai', {
       method: 'POST',
@@ -293,12 +312,15 @@ async function callAI(
       body: JSON.stringify({ prompt, system }),
     });
     if (!r.ok) {
-      return fallback();
+      return { text: fallback(), isFallback: true };
     }
     const data = (await r.json()) as { text: string };
-    return data.text || fallback();
+    if (data && typeof data.text === 'string' && data.text.trim()) {
+      return { text: data.text, isFallback: false };
+    }
+    return { text: fallback(), isFallback: true };
   } catch {
-    return fallback();
+    return { text: fallback(), isFallback: true };
   }
 }
 

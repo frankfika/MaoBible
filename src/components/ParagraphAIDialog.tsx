@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Paragraph } from '@/types';
+import type { AIResult } from '@/services/ai';
 
 /**
  * ParagraphAIDialog — bottom sheet that explains a Chinese paragraph in
  * modern Chinese using the LLM. Called from ParagraphView.onTap.
+ *
+ * When the underlying call falls back to the offline hint, we surface it
+ * as a real error (separate styling, explicit "AI 不可用" label) so the
+ * user can tell a real answer from a fallback.
  */
 export function ParagraphAIDialog({
   paragraph,
@@ -13,20 +18,28 @@ export function ParagraphAIDialog({
 }: {
   paragraph: Paragraph | null;
   onClose: () => void;
-  explain: (text: string) => Promise<string>;
+  explain: (text: string) => Promise<AIResult>;
 }) {
-  const [result, setResult] = useState<string>('');
+  const [result, setResult] = useState<AIResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!paragraph) {
-      setResult('');
+      setResult(null);
       return;
     }
     setLoading(true);
+    let cancelled = false;
     void explain(paragraph.text)
-      .then(setResult)
-      .finally(() => setLoading(false));
+      .then((r) => {
+        if (!cancelled) setResult(r);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [paragraph, explain]);
 
   useEffect(() => {
@@ -85,8 +98,24 @@ export function ParagraphAIDialog({
                   {paragraph.text}
                 </p>
               </div>
-              <div className="rounded-card border border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10 p-3">
-                <p className="text-[11px] text-cinnabar/80 mb-1">现代白话</p>
+              <div
+                className={[
+                  'rounded-card border p-3',
+                  result?.isFallback
+                    ? 'border-secondary/30 bg-secondary/5 dark:bg-dark-ink/10'
+                    : 'border-cinnabar/30 bg-cinnabar/5 dark:bg-cinnabar/10',
+                ].join(' ')}
+              >
+                <p
+                  className={[
+                    'text-[11px] mb-1',
+                    result?.isFallback
+                      ? 'text-secondary dark:text-dark-secondary'
+                      : 'text-cinnabar/80',
+                  ].join(' ')}
+                >
+                  {result?.isFallback ? '⚠ AI 不可用 · 离线提示' : '现代白话'}
+                </p>
                 {loading ? (
                   <div className="flex items-center gap-2 text-secondary dark:text-dark-secondary text-sm py-2">
                     <span className="inline-block w-3 h-3 border-2 border-cinnabar border-t-transparent rounded-full animate-spin" />
@@ -94,7 +123,7 @@ export function ParagraphAIDialog({
                   </div>
                 ) : (
                   <p className="text-[14px] sm:text-[15px] text-ink dark:text-dark-ink font-serif-cn leading-relaxed whitespace-pre-wrap">
-                    {result || '抱歉, AI 暂时不可用'}
+                    {result?.text ?? ''}
                   </p>
                 )}
               </div>

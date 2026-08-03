@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ARTICLES } from '@/data/manifest';
@@ -36,8 +36,13 @@ export function Ask() {
     void getAllChats().then(setChats);
   }, []);
 
+  // Track an in-flight request so a mid-submit mode switch / unmount
+  // doesn't write a stale result into the new mode's state.
+  const inflightRef = useRef(0);
+
   const onSubmit = async () => {
     if (!text.trim() || loading) return;
+    const ticket = ++inflightRef.current;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -46,21 +51,26 @@ export function Ask() {
       if (mode === 'respond') {
         setStage('第 1 轮: 从 22 篇里选最贴的…');
         const r = await analyzeSituation(text);
+        if (ticket !== inflightRef.current) return; // user switched mode/unmounted
         setStage('第 2 轮: 在每篇里挑对应你处境的段落 + 写白话…');
         setResult(r);
       } else {
         setStage('AI 思考中…');
-        const answer = await askAI(text);
+        const { text: answer, isFallback } = await askAI(text);
+        if (ticket !== inflightRef.current) return;
         setChatAnswer(answer);
-        // Save to chat history
+        if (isFallback) {
+          setError('智能服务暂时不可用，以下是基于本机文章库的离线回应。原文阅读、收藏和阅读进度仍可正常使用。');
+        }
+        // Save to chat history (still useful for the user to keep the Q)
         const userMsg: ChatMessage = {
-          id: String(Date.now() - 1),
+          id: `m-${Date.now()}-u`,
           role: 'user',
           text,
           createdAt: new Date(Date.now() - 1).toISOString(),
         };
         const aiMsg: ChatMessage = {
-          id: String(Date.now()),
+          id: `m-${Date.now()}-a`,
           role: 'ai',
           text: answer,
           createdAt: new Date().toISOString(),
@@ -73,16 +83,19 @@ export function Ask() {
           updatedAt: new Date().toISOString(),
         };
         await saveChat(thread);
+        if (ticket !== inflightRef.current) return;
         setChats((prev) => [thread, ...prev]);
         setText('');
       }
-    } catch (e) {
-      setError(
-        'AI 后端不可用。这个版本需要在本机 dev 模式 (pnpm dev) 跑, 或部署一个真实 LLM 后端。线上 mcode.cn 静态部署没有 AI 后端, 所以这一条不会真的去调 LLM。',
-      );
+    } catch {
+      if (ticket === inflightRef.current) {
+        setError('智能服务暂时不可用，请稍后重试。原文阅读、收藏和阅读进度仍可正常使用。');
+      }
     } finally {
-      setLoading(false);
-      setStage('');
+      if (ticket === inflightRef.current) {
+        setLoading(false);
+        setStage('');
+      }
     }
   };
 
@@ -117,6 +130,11 @@ export function Ask() {
       <div className="flex items-center gap-1 p-1 rounded-card bg-ink/5 dark:bg-dark-ink/10 mb-3 w-full sm:w-fit">
         <button
           onClick={() => {
+            // Cancel any in-flight request before switching modes; was: kept
+            // the old stage text and overwrote the new mode's empty state.
+            inflightRef.current++;
+            setLoading(false);
+            setStage('');
             setMode('respond');
             setResult(null);
             setChatAnswer(null);
@@ -133,6 +151,9 @@ export function Ask() {
         </button>
         <button
           onClick={() => {
+            inflightRef.current++;
+            setLoading(false);
+            setStage('');
             setMode('ask');
             setResult(null);
             setChatAnswer(null);
@@ -227,9 +248,6 @@ export function Ask() {
             <p className="text-[11px] text-secondary mb-1 tracking-wider">⚠ AI 后端不可用</p>
             <p className="text-[13px] sm:text-sm text-ink/85 dark:text-dark-ink/85 leading-relaxed">
               {error}
-            </p>
-            <p className="mt-2 text-[12px] text-secondary dark:text-dark-secondary">
-              本机跑 <code className="px-1 py-0.5 rounded bg-ink/5 dark:bg-dark-ink/10 text-cinnabar">pnpm dev</code> 就能用。
             </p>
           </motion.div>
         )}

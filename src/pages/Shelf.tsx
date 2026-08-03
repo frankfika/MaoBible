@@ -15,10 +15,22 @@ import type { ArticleMetadata, ReadingProgress, Bookmark } from '@/types';
  *   4. 全部文章 — 22 cards in 2-col grid (mobile)
  *   5. 我的收藏 — only if any bookmarks
  */
+const THEME_STORAGE_KEY = 'maobible.shelf-theme';
+
 export function Shelf() {
   const [progress, setProgress] = useState<ReadingProgress[]>([]);
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
-  const [theme, setTheme] = useState<string>('all');
+  // Persist the theme filter across remounts (was: reset to 'all' every
+  // time the user switched tabs and came back, because Shelf unmounted).
+  const [theme, setTheme] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'all';
+    return window.localStorage.getItem(THEME_STORAGE_KEY) ?? 'all';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   useEffect(() => {
     void getAllReadingProgress().then(setProgress);
@@ -63,7 +75,7 @@ export function Shelf() {
           毛选
         </h1>
         <p className="mt-1 text-xs sm:text-sm text-secondary dark:text-dark-secondary">
-          {ARTICLES.length} 篇 · 人民出版社 1991 官方版本 · 中英双语
+          {ARTICLES.length} 篇 · 据人民出版社 1991 年版整理 · 中英双语
         </p>
       </header>
 
@@ -159,7 +171,7 @@ export function Shelf() {
               key={t.name}
               onClick={() => setTheme(t.name)}
               className={[
-                'shrink-0 min-h-[36px] px-3 py-1.5 text-[12px] sm:text-sm rounded-full border transition-colors',
+                'shrink-0 min-h-[44px] px-3 py-2 text-[12px] sm:text-sm rounded-full border transition-colors',
                 theme === t.name
                   ? 'border-cinnabar text-cinnabar bg-cinnabar/5'
                   : 'border-ink/10 dark:border-dark-line text-secondary dark:text-dark-secondary hover:border-cinnabar/40',
@@ -223,7 +235,7 @@ export function Shelf() {
       )}
 
       <footer className="mt-8 pt-4 text-center text-[10px] sm:text-[11px] text-secondary dark:text-dark-secondary">
-        原文来自公开的人民出版社 1991 年版《毛泽东选集》
+        版本来源：人民出版社 1991 年版《毛泽东选集》
       </footer>
     </div>
   );

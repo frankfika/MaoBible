@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Capacitor } from '@capacitor/core';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { Share } from '@capacitor/share';
 import { useArticle } from '@/hooks/useArticle';
 import { useContentLang } from '@/hooks/useContentLang';
 import {
@@ -42,9 +45,16 @@ export function Reader() {
   const [showAI, setShowAI] = useState(true);
   const [showToc, setShowToc] = useState(false);
   const [aiParagraph, setAiParagraph] = useState<Paragraph | null>(null);
+  // Track the paragraph currently in view, so bookmark stores the
+  // right place (was: always paragraphs[0]?.id, which jumped users to
+  // the top of the article on resume).
+  const [activeParagraphId, setActiveParagraphId] = useState<string>('');
   const articleRef = useRef<HTMLElement | null>(null);
   const lastSaveRef = useRef(0);
   const sessionStartRef = useRef<number>(Date.now());
+  // Holds the inner highlight-removal timer for hash-jump, so we can
+  // cancel it on unmount / nav-away (was: leaked setTimeout per jump).
+  const highlightTimerRef = useRef<number | null>(null);
 
   const meta = article?.metadata;
   const currentIndex = useMemo(
@@ -83,6 +93,7 @@ export function Reader() {
     if (!article || !articleRef.current) return;
     const el = articleRef.current;
     let restored = false;
+    let userTouched = false;
     const saveCurrentProgress = () => {
       if (!restored) return;
       const frac =
@@ -98,6 +109,7 @@ export function Reader() {
           break;
         }
       }
+      if (activeId) setActiveParagraphId(activeId);
       void setReadingProgress({
         articleId: id,
         scrollFraction: Math.max(0, Math.min(1, frac)),
@@ -107,7 +119,10 @@ export function Reader() {
     };
 
     void getReadingProgress(id).then((p) => {
-      if (p) {
+      if (p && !userTouched) {
+        // Only auto-restore if the user hasn't already scrolled. Previously
+        // this ran on first frame and would yank the reader back to a stale
+        // scrollFraction if they had already started reading.
         const target = Math.max(
           0,
           p.scrollFraction * (el.scrollHeight - el.clientHeight),
@@ -117,6 +132,7 @@ export function Reader() {
       restored = true;
     });
     const onScroll = () => {
+      userTouched = true;
       const now = Date.now();
       if (now - lastSaveRef.current < 1000) return;
       lastSaveRef.current = now;
@@ -149,7 +165,10 @@ export function Reader() {
       );
       if (!el) return;
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Highlight: add ring, then remove after 1.6s
+      // Highlight: add ring, then remove after 1.6s. The inner timer is
+      // stashed in highlightTimerRef so we can cancel it on unmount /
+      // re-render (previously: leaked, could fire on a detached node and
+      // leave the ring class stuck on a re-entered same-article mount).
       el.classList.add(
         'ring-2',
         'ring-cinnabar/40',
@@ -159,7 +178,10 @@ export function Reader() {
         'rounded',
         'transition',
       );
-      window.setTimeout(() => {
+      if (highlightTimerRef.current != null) {
+        window.clearTimeout(highlightTimerRef.current);
+      }
+      highlightTimerRef.current = window.setTimeout(() => {
         el.classList.remove(
           'ring-2',
           'ring-cinnabar/40',
@@ -167,9 +189,16 @@ export function Reader() {
           'ring-offset-paper',
           'dark:ring-offset-dark-paper',
         );
+        highlightTimerRef.current = null;
       }, 1600);
     }, 80);
-    return () => window.clearTimeout(t);
+    return () => {
+      window.clearTimeout(t);
+      if (highlightTimerRef.current != null) {
+        window.clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = null;
+      }
+    };
   }, [article, location.hash, id]);
 
   if (loading) {
@@ -194,20 +223,66 @@ export function Reader() {
   }
 
   const primary = article.translations[contentLang];
-  const secondary = mode === 'bilingual' ? article.translations[otherLang(contentLang)] : null;
+  // If the user picked bilingual but the secondary translation is missing
+  // (e.g. this article only has zh-CN), fall back to single so the page
+  // doesn't silently render a single-column layout under a "bilingual"
+  // toolbar. We show a small notice so the user knows why.
+  const bilingualRequested = mode === 'bilingual';
+  const bilingualAvailable = bilingualRequested
+    ? Boolean(article.translations[otherLang(contentLang)])
+    : false;
+  const showBilingual = bilingualRequested && bilingualAvailable;
+  const secondary = showBilingual
+    ? article.translations[otherLang(contentLang)]
+    : null;
   const secondaryCode = otherLang(contentLang) as LangCode;
+  const secondaryByParagraphId = new Map(
+    secondary?.paragraphs.map((paragraph) => [paragraph.id, paragraph]) ?? [],
+  );
 
   const toggleBookmark = async () => {
     if (isBookmarked) {
       await clearBookmark(id);
       setIsBookmarked(false);
     } else {
+      // Use the paragraph currently in view, falling back to the first
+      // body paragraph (so the bookmark always lands somewhere meaningful
+      // — was: always paragraphs[0]?.id, which sent users to the top).
+      const fallback = primary?.paragraphs.find((p) => p.kind === 'body')?.id
+        ?? primary?.paragraphs[0]?.id
+        ?? '';
       await setBookmark({
         articleId: id,
-        paragraphId: primary?.paragraphs[0]?.id ?? '',
+        paragraphId: activeParagraphId || fallback,
         createdAt: new Date().toISOString(),
       });
       setIsBookmarked(true);
+    }
+    if (Capacitor.isNativePlatform()) {
+      await Haptics.impact({ style: ImpactStyle.Light });
+    }
+  };
+
+  const shareArticle = async () => {
+    const title = meta?.title ?? '毛选';
+    const text = [
+      `《${title}》`,
+      meta?.interpretation,
+      '来自「毛选」阅读器',
+    ].filter(Boolean).join('\n\n');
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ title, text, dialogTitle: '分享文章' });
+        return;
+      }
+      if (navigator.share) {
+        await navigator.share({ title, text, url: window.location.href });
+      } else {
+        await navigator.clipboard.writeText(`${text}\n\n${window.location.href}`);
+      }
+    } catch {
+      // Closing the system share sheet is a normal user action.
     }
   };
 
@@ -220,13 +295,14 @@ export function Reader() {
       {/* Top progress bar — fixed to top of viewport */}
       <TopProgressBar containerRef={articleRef} />
 
-      {/* Sticky toolbar */}
+      {/* Sticky toolbar — horizontally scrollable on 320px screens
+          (7 buttons + 1 back chevron overflowed on small Android). */}
       <div
         className="sticky top-0 z-20 -mx-4 sm:-mx-8 px-3 sm:px-8 pb-1.5
                    pt-[calc(.375rem+env(safe-area-inset-top))]
                    backdrop-blur-md bg-paper/85 dark:bg-dark-paper/85
                    border-b border-ink/5 dark:border-dark-line
-                   flex items-center gap-1"
+                   flex items-center gap-1 overflow-x-auto scrollbar-none"
       >
         <button
           onClick={() => navigate(-1)}
@@ -239,7 +315,7 @@ export function Reader() {
         </button>
         <button
           onClick={() => setShowToc(true)}
-          className="min-h-[36px] px-2 rounded-card text-xs text-secondary dark:text-dark-secondary
+          className="min-h-[44px] px-2.5 rounded-card text-xs text-secondary dark:text-dark-secondary
                      border border-ink/10 dark:border-dark-line
                      hover:border-cinnabar/40 active:scale-95 transition-all"
           title="目录"
@@ -264,6 +340,12 @@ export function Reader() {
           active={showAI}
           onClick={() => setShowAI((s) => !s)}
           title="AI 解读"
+        />
+        <ToolbarButton
+          label="分享"
+          active={false}
+          onClick={() => void shareArticle()}
+          title="分享文章"
         />
         <ToolbarButton
           label={isBookmarked ? '★' : '☆'}
@@ -305,7 +387,7 @@ export function Reader() {
                 </div>
                 <button
                   onClick={() => setShowAI(false)}
-                  className="text-[10px] text-secondary hover:text-cinnabar transition-colors min-w-[28px] min-h-[28px] flex items-center justify-center"
+                  className="text-[10px] text-secondary hover:text-cinnabar transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 -my-2"
                   aria-label="关闭解读"
                 >
                   ✕
@@ -315,10 +397,10 @@ export function Reader() {
                 {meta.interpretation}
               </p>
               <Link
-                to="/ai"
-                className="mt-2 inline-block text-[11px] sm:text-xs text-cinnabar/85 hover:text-cinnabar transition-colors"
+                to="/ask"
+                className="mt-1 inline-flex min-h-[44px] items-center text-[11px] sm:text-xs text-cinnabar/85 hover:text-cinnabar transition-colors"
               >
-                问 AI 更多 →
+                去回应页继续问 →
               </Link>
             </div>
           </motion.div>
@@ -330,37 +412,74 @@ export function Reader() {
         点按带虚线提示的段落，可查看白话解读
       </p>
 
-      <div
-        className={
-          mode === 'bilingual'
-            ? 'grid md:grid-cols-2 md:gap-10'
-            : ''
-        }
-      >
-        <section
-          className={
-            mode === 'bilingual'
-              ? 'md:border-r md:border-ink/8 md:pr-8'
-              : ''
-          }
-        >
-          {primary?.paragraphs.map((p) => (
+      {bilingualRequested && !bilingualAvailable && (
+        <p className="mb-3 rounded-card border border-ink/8 dark:border-dark-line
+                      bg-secondary/5 dark:bg-dark-ink/5 px-3 py-2
+                      text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
+          这篇文章暂无{contentLang === 'zh-CN' ? '英文' : '中文'}对照译文，已自动按单语显示。
+        </p>
+      )}
+
+      {showBilingual && secondary ? (
+        <section aria-label="逐段双语对照" className="divide-y divide-ink/8 dark:divide-dark-line">
+          {primary?.paragraphs.map((paragraph) => {
+            const pairedParagraph = secondaryByParagraphId.get(paragraph.id);
+            return (
+              <div
+                key={paragraph.id}
+                className="grid py-2 md:grid-cols-2 md:gap-10 md:py-0"
+              >
+                <div className="md:border-r md:border-ink/8 md:pr-8">
+                  <ParagraphView
+                    p={paragraph}
+                    lang={contentLang}
+                    onTap={contentLang === 'zh-CN' ? () => setAiParagraph(paragraph) : undefined}
+                  />
+                </div>
+                {pairedParagraph ? (
+                  <div className="border-l-2 border-moss/20 pl-3 md:border-l-0 md:pl-0">
+                    <ParagraphView p={pairedParagraph} lang={secondaryCode} />
+                  </div>
+                ) : (
+                  <p className="my-3.5 text-sm text-secondary dark:text-dark-secondary md:my-5">
+                    该段暂无对照译文
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      ) : (
+        <section>
+          {primary?.paragraphs.map((paragraph) => (
             <ParagraphView
-              key={p.id}
-              p={p}
+              key={paragraph.id}
+              p={paragraph}
               lang={contentLang}
-              onTap={contentLang === 'zh-CN' ? () => setAiParagraph(p) : undefined}
+              onTap={contentLang === 'zh-CN' ? () => setAiParagraph(paragraph) : undefined}
             />
           ))}
         </section>
-        {mode === 'bilingual' && secondary && (
-          <section className="md:pl-2 mt-6 md:mt-0">
-            {secondary.paragraphs.map((p) => (
-              <ParagraphView key={p.id} p={p} lang={secondaryCode} />
-            ))}
-          </section>
+      )}
+
+      <section
+        aria-label="版本与来源"
+        className="mt-10 rounded-card-lg border border-ink/8 dark:border-dark-line bg-white/35 dark:bg-dark-ink/5 p-4 text-[11px] sm:text-xs leading-relaxed text-secondary dark:text-dark-secondary"
+      >
+        <h2 className="font-medium text-ink/80 dark:text-dark-ink/80">版本与来源</h2>
+        <p className="mt-1">{primary?.source ?? '来源待补充'}</p>
+        {primary?.translator && <p className="mt-1">译者：{primary.translator}</p>}
+        {primary?.licenseNote && <p className="mt-1">{primary.licenseNote}</p>}
+        <p className="mt-1">内容状态：{primary?.status ?? 'unknown'}</p>
+        {secondary && (
+          <div className="mt-3 border-t border-ink/8 dark:border-dark-line pt-3">
+            <p>{secondary.source ?? '对照版本来源待补充'}</p>
+            {secondary.translator && <p className="mt-1">译者：{secondary.translator}</p>}
+            {secondary.licenseNote && <p className="mt-1">{secondary.licenseNote}</p>}
+            <p className="mt-1">内容状态：{secondary.status}</p>
+          </div>
         )}
-      </div>
+      </section>
 
       <nav className="mt-12 sm:mt-16 pt-6 border-t border-ink/8 flex justify-between gap-4 text-sm">
         {prevArticle ? (
@@ -435,7 +554,7 @@ function ToolbarButton({
       onClick={onClick}
       title={title}
       className={[
-        'min-h-[36px] px-2.5 rounded-card border transition-colors active:scale-95',
+        'min-h-[44px] min-w-[44px] px-2.5 rounded-card border transition-colors active:scale-95',
         isIcon ? 'text-base' : 'text-xs',
         active
           ? 'border-cinnabar text-cinnabar bg-cinnabar/5'

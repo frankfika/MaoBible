@@ -1,0 +1,103 @@
+apply plugin: 'com.android.application'
+
+def signingProperties = new Properties()
+def signingPropertiesFile = rootProject.file('keystore.properties')
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+
+def signingValue = { propertyName, environmentName ->
+    signingProperties.getProperty(propertyName) ?: System.getenv(environmentName)
+}
+
+def releaseStoreFile = signingValue('storeFile', 'MAOBIBLE_UPLOAD_STORE_FILE')
+def releaseStorePassword = signingValue('storePassword', 'MAOBIBLE_UPLOAD_STORE_PASSWORD')
+def releaseKeyAlias = signingValue('keyAlias', 'MAOBIBLE_UPLOAD_KEY_ALIAS')
+def releaseKeyPassword = signingValue('keyPassword', 'MAOBIBLE_UPLOAD_KEY_PASSWORD')
+def hasReleaseSigning = [releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+def releaseVersionCode = (signingProperties.getProperty('versionCode') ?: System.getenv('MAOBIBLE_VERSION_CODE') ?: '1').toInteger()
+def releaseVersionName = signingProperties.getProperty('versionName') ?: System.getenv('MAOBIBLE_VERSION_NAME') ?: '1.0.0'
+
+android {
+    namespace = "com.frankfika.maobible"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.frankfika.maobible"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode releaseVersionCode
+        versionName releaseVersionName
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+            // Enable R8 (minify + shrink) for release. The default
+            // proguard-android.txt + proguard-rules.pro already covers
+            // Capacitor's reflection-based plugin loader. The bundled
+            // web assets live in assets/public and are not affected.
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def requestsReleasePackage = graph.allTasks.any {
+        it.project == project && it.name in ['bundleRelease', 'assembleRelease', 'packageRelease']
+    }
+    if (requestsReleasePackage && !hasReleaseSigning) {
+        throw new GradleException(
+            'Release signing is not configured. Copy android/keystore.properties.example to ' +
+            'android/keystore.properties and fill it with the upload-key values, or provide the ' +
+            'MAOBIBLE_UPLOAD_* environment variables.'
+        )
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

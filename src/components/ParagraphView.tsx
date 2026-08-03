@@ -4,6 +4,10 @@ import type { Paragraph, LangCode } from '@/types';
  * Simple paragraph renderer — typography + optional tap handler.
  * Tap → AI 解释 dialog (only for Chinese paragraphs, since the LLM
  * is currently trained on Chinese interpretation).
+ *
+ * Always renders the same element type for a given `kind`, even when
+ * `onTap` is undefined — previously fell back from <button> to <p>, which
+ * caused focus loss and re-mounts when the user toggled content language.
  */
 export function ParagraphView({
   p,
@@ -31,31 +35,34 @@ export function ParagraphView({
       ? 'para-zh text-[16px] sm:text-[17px] my-3.5 sm:my-5 leading-[1.9] sm:leading-[2]'
       : 'para-en text-[15px] sm:text-base my-3.5 sm:my-5 leading-[1.75] sm:leading-[1.85]';
 
-  if (onTap) {
+  if (!onTap) {
+    // Plain non-interactive paragraph (English mode, or bilingual
+    // secondary column). Renders as <p> with the same data-para-id
+    // attribute so scroll/highlight logic keeps working.
     return (
-      <button
-        type="button"
+      <p
         data-para-id={p.id}
-        onClick={onTap}
-        className={[
-          textClass,
-          'block w-full text-left rounded-lg border-b border-dashed border-cinnabar/20',
-          'px-1 -mx-1 transition-colors hover:bg-cinnabar/[0.04] active:bg-cinnabar/[0.07]',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar/60',
-        ].join(' ')}
-        aria-label={`解读段落：${p.text.slice(0, 24)}`}
+        className={textClass}
       >
         {p.text}
-      </button>
+      </p>
     );
   }
 
   return (
-    <p
+    <button
+      type="button"
       data-para-id={p.id}
-      className={textClass}
+      onClick={onTap}
+      className={[
+        textClass,
+        'block w-full text-left rounded-lg border-b border-dashed border-cinnabar/20',
+        'px-1 -mx-1 transition-colors hover:bg-cinnabar/[0.04] active:bg-cinnabar/[0.07]',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar/60',
+      ].join(' ')}
+      aria-label={`解读段落：${p.text.slice(0, 24)}`}
     >
       {p.text}
-    </p>
+    </button>
   );
 }

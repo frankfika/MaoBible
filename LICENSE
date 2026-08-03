@@ -1,0 +1,39 @@
+MIT License
+
+Copyright (c) 2026 Frank Chen (frankfika)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+---
+
+Important — content license (NOT covered by the MIT grant above):
+
+The Chinese source text in `public/content/*.json` is taken from 人民出版社
+1991 年第 2 版《毛泽东选集》. This is public-domain source material in
+the People's Republic of China as of the time of transcription, but the
+rights status has not been re-confirmed for online distribution outside
+China. Before distributing the app or a derivative build outside the
+research / non-commercial envelope, see `docs/content-release-audit.md` and
+obtain a written authorization or a jurisdiction-specific legal opinion.
+
+The English translations in `public/content/*.json` under
+`translations.en` are LLM-generated drafts (`status: draft`). They are NOT
+the Foreign Languages Press edition (which remains under US copyright until
+2049). They are released for review use only and may not be redistributed
+as a published translation.

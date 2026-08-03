@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -27,15 +28,31 @@ function isStandalone() {
   );
 }
 
+/**
+ * Detects iOS / iPadOS, including iPadOS 13+ which reports a Mac
+ * user-agent when running in desktop mode. Without this branch, iPad
+ * users on iPadOS 13+ would see the Android install hint instead of
+ * the "Share → Add to Home Screen" Safari flow.
+ */
+function detectIOSLike() {
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  // iPadOS 13+ in desktop mode: UA says "Mac", but has touch.
+  const isMacUA = /Mac/.test(ua);
+  const hasTouch = navigator.maxTouchPoints > 0;
+  return isMacUA && hasTouch;
+}
+
 export function InstallAppCard() {
-  const [installed, setInstalled] = useState(isStandalone);
+  const isNative = Capacitor.isNativePlatform();
+  const [installed, setInstalled] = useState(() => isNative || isStandalone());
   const [canPrompt, setCanPrompt] = useState(Boolean(deferredPrompt));
   const [online, setOnline] = useState(navigator.onLine);
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isIOS = detectIOSLike();
 
   useEffect(() => {
     const syncInstallState = () => {
-      setInstalled(isStandalone());
+      setInstalled(isNative || isStandalone());
       setCanPrompt(Boolean(deferredPrompt));
     };
     const goOnline = () => setOnline(true);
@@ -48,7 +65,7 @@ export function InstallAppCard() {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
     };
-  }, []);
+  }, [isNative]);
 
   const install = async () => {
     if (!deferredPrompt) return;
@@ -93,12 +110,14 @@ export function InstallAppCard() {
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-secondary dark:text-dark-secondary">
             {installed
-              ? '从主屏幕打开，全屏阅读；文章会自动缓存，断网也能继续。'
+              ? isNative
+                ? '你正在使用完整手机应用；文章、收藏和阅读进度保存在本机。'
+                : '从主屏幕打开，全屏阅读；文章会自动缓存，断网也能继续。'
               : isIOS
                 ? '在 Safari 点“分享”，再选“添加到主屏幕”，即可像 App 一样使用。'
                 : '添加到主屏幕，全屏阅读并缓存文章，弱网或断网也能继续。'}
           </p>
-          {canPrompt && !installed && (
+          {canPrompt && !installed && !isNative && (
             <button
               type="button"
               onClick={() => void install()}

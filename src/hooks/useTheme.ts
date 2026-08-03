@@ -10,9 +10,13 @@ function applyTheme(mode: Mode) {
     (mode === 'system' &&
       window.matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.classList.toggle('dark', isDark);
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', isDark ? '#191918' : '#F4F1EA');
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', isDark ? '#191918' : '#F4F1EA');
+  // Also update <meta name="apple-mobile-web-app-status-bar-style">
+  const appleMeta = document.querySelector(
+    'meta[name="apple-mobile-web-app-status-bar-style"]',
+  );
+  if (appleMeta) appleMeta.setAttribute('content', isDark ? 'black' : 'default');
 }
 
 export function useTheme(): [Mode, (m: Mode) => void] {
@@ -21,9 +25,12 @@ export function useTheme(): [Mode, (m: Mode) => void] {
     return stored ?? 'system';
   });
 
+  // Apply immediately on mount so the initial render matches stored/system
+  // preference (otherwise we'd flash the wrong theme on first paint).
   useEffect(() => {
     applyTheme(mode);
     localStorage.setItem(STORAGE_KEY, mode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
   // React to system changes when in "system" mode

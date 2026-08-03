@@ -77,6 +77,9 @@ export default defineConfig({
         name: '毛选 · 多语言阅读器',
         short_name: '毛选',
         description: '安静、可信的《毛泽东选集》多语言阅读与思想研习空间。',
+        // Default to zh-CN for the install sheet / OS launcher name. The
+        // app's UI lang can still be flipped at runtime to English.
+        lang: 'zh-CN',
         theme_color: '#1D8C80',
         background_color: '#F4F1EA',
         display: 'standalone',
@@ -150,7 +153,15 @@ export default defineConfig({
     host: true,
   },
   build: {
-    target: 'es2020',
-    sourcemap: true,
+    // minSdk 24 ships with a Chrome 51-era V8 which doesn't support every
+    // es2020 feature; pin to es2019 to keep the JS bundle safely transpiled
+    // for our WebView floor. The PWA targets evergreen browsers anyway,
+    // but the AAB is served inside Android System WebView.
+    target: 'es2019',
+    sourcemap: false,
+    // Roll up the 5 pages + 9 components into a single chunk today (was
+    // a 424k index-*.js). After we ship react.lazy() in Reader / Ask,
+    // this can drop to ~140k for the first paint.
+    chunkSizeWarningLimit: 500,
   },
 });

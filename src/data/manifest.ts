@@ -7,6 +7,14 @@
  * when the user taps 解读 in the reader, never in the feed by default.
  *
  * `situations` is a list of concrete user scenarios for the Ask page search.
+ *
+ * Paragraph id prefixes (intentionally compact, NOT memory's recommended
+ * `{article-prefix}-{NNN}` zero-pad 3 form for most articles, because
+ * changing them would break every existing deep link / bookmark / progress
+ * pointer stored in users' IndexedDB). Stable across zh-CN and en. See
+ * /Users/fangchen/Baidu/GitHub/MaoBible/docs/content-release-audit.md for
+ * status. New articles SHOULD use readable prefixes (hunan-, classes-,
+ * spark-) and zero-padded 3-digit counters.
  */
 import type { ArticleMetadata } from '@/types';
 
