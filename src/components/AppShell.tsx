@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 
-type IconName = 'shelf' | 'ask' | 'person';
+type IconName = 'shelf' | 'ask' | 'shake' | 'person';
 
 const TABS: { to: string; label: string; icon: IconName; end?: boolean }[] = [
   { to: '/', label: '书架', icon: 'shelf', end: true },
   { to: '/ask', label: '回应', icon: 'ask' },
+  { to: '/shake', label: '摇一摇', icon: 'shake' },
   { to: '/me', label: '我', icon: 'person' },
 ];
 
@@ -19,7 +20,9 @@ export function AppShell() {
     const pageNames: Record<string, string> = {
       '/': '书架',
       '/ask': '回应',
+      '/shake': '摇一摇',
       '/me': '我的',
+      '/privacy': '隐私政策',
     };
     document.title = `${pageNames[pathname] ?? '书架'} · 毛选`;
   }, [isReader, pathname]);
@@ -63,7 +66,7 @@ function BottomNav() {
                  border-t border-ink/8 dark:border-dark-line shadow-[0_-12px_32px_rgba(34,34,31,0.04)]
                  pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="max-w-3xl mx-auto h-[3.75rem] grid grid-cols-3 px-2">
+      <div className="max-w-3xl mx-auto h-[3.75rem] grid grid-cols-4 px-1">
         {TABS.map((tab) => (
           <NavLink
             key={tab.to}
@@ -130,6 +133,25 @@ function NavIcon({ name }: { name: IconName }) {
         <path d="M9 9.5c0-.7.5-1.2 1.2-1.2" />
         <path d="M12 9.5c0-.7.5-1.2 1.2-1.2" />
         <path d="M9.5 12.4c.5.4 1.4.7 2.3.7s1.8-.3 2.3-.7" />
+      </svg>
+    );
+  }
+  if (name === 'shake') {
+    return (
+      <svg {...common}>
+        {/* Phone with motion waves — the "shake" affordance */}
+        <rect x="9" y="3.5" width="6" height="13" rx="1.4" />
+        <line x1="11" y1="5.8" x2="13" y2="5.8" />
+        <circle cx="12" cy="14.4" r="0.55" fill="currentColor" stroke="none" />
+        {/* Left waves */}
+        <path d="M6 6.5 Q3.5 8 3.5 10" />
+        <path d="M7.5 8.5 Q6 9.5 6 10" />
+        {/* Right waves */}
+        <path d="M18 6.5 Q20.5 8 20.5 10" />
+        <path d="M16.5 8.5 Q18 9.5 18 10" />
+        {/* Subtle motion arrows */}
+        <path d="M2 18.5l1.2-1.2M3.2 18.5H1.5" />
+        <path d="M22 18.5l-1.2-1.2M20.8 18.5h1.7" />
       </svg>
     );
   }
