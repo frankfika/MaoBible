@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Paragraph } from '@/types';
 import type { AIResult } from '@/services/ai';
@@ -94,7 +95,7 @@ export function ParagraphAIDialog({
                 <p className="text-[11px] text-secondary dark:text-dark-secondary mb-1">
                   原文
                 </p>
-                <p className="text-[13px] sm:text-sm text-ink dark:text-dark-ink leading-relaxed line-clamp-4">
+                <p className="text-[13px] sm:text-sm text-ink dark:text-dark-ink leading-relaxed">
                   {paragraph.text}
                 </p>
               </div>
@@ -108,19 +109,34 @@ export function ParagraphAIDialog({
               >
                 <p
                   className={[
-                    'text-[11px] mb-1',
+                    'text-[11px] mb-1.5 flex items-center gap-1.5',
                     result?.isFallback
                       ? 'text-secondary dark:text-dark-secondary'
                       : 'text-cinnabar/80',
                   ].join(' ')}
                 >
-                  {result?.isFallback ? '⚠ AI 不可用 · 离线提示' : '现代白话'}
+                  {result?.isFallback ? '💡 本地简易提示' : '现代白话'}
                 </p>
                 {loading ? (
                   <div className="flex items-center gap-2 text-secondary dark:text-dark-secondary text-sm py-2">
                     <span className="inline-block w-3 h-3 border-2 border-cinnabar border-t-transparent rounded-full animate-spin" />
                     AI 思考中…
                   </div>
+                ) : result?.isFallback ? (
+                  <>
+                    <p className="text-[14px] sm:text-[15px] text-ink dark:text-dark-ink font-serif-cn leading-relaxed">
+                      {result.text}
+                    </p>
+                    {result.reason === 'no-config' && (
+                      <Link
+                        to="/me"
+                        onClick={onClose}
+                        className="mt-2.5 inline-flex min-h-[36px] items-center rounded-card bg-cinnabar px-3.5 text-[12px] text-paper hover:bg-cinnabar/90 active:scale-95 transition-all"
+                      >
+                        去「我」配置 AI →
+                      </Link>
+                    )}
+                  </>
                 ) : (
                   <p className="text-[14px] sm:text-[15px] text-ink dark:text-dark-ink font-serif-cn leading-relaxed whitespace-pre-wrap">
                     {result?.text ?? ''}

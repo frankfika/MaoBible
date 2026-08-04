@@ -56,13 +56,26 @@ export function ParagraphView({
       onClick={onTap}
       className={[
         textClass,
-        'block w-full text-left rounded-lg border-b border-dashed border-cinnabar/20',
-        'px-1 -mx-1 transition-colors hover:bg-cinnabar/[0.04] active:bg-cinnabar/[0.07]',
+        'group relative block w-full text-left',
+        'rounded-lg border border-dashed border-cinnabar/40 dark:border-cinnabar/35',
+        'px-3 -mx-1 py-1 my-2 sm:my-3',
+        'bg-cinnabar/[0.02] hover:bg-cinnabar/[0.07] active:bg-cinnabar/[0.10]',
+        'transition-colors',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-cinnabar/60',
       ].join(' ')}
       aria-label={`解读段落：${p.text.slice(0, 24)}`}
     >
       {p.text}
+      <span
+        className="absolute -top-2 right-2 inline-flex items-center gap-0.5
+                   px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px]
+                   bg-cinnabar text-paper
+                   opacity-80 group-hover:opacity-100 transition-opacity
+                   pointer-events-none"
+        aria-hidden
+      >
+        💡 AI
+      </span>
     </button>
   );
 }

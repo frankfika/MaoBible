@@ -409,7 +409,7 @@ export function Reader() {
 
       {/* Hint about AI paragraph tap */}
       <p className="mb-3 text-[11px] sm:text-xs text-secondary dark:text-dark-secondary">
-        点按带虚线提示的段落，可查看白话解读
+        点按任一段落，看 AI 白话翻译
       </p>
 
       {bilingualRequested && !bilingualAvailable && (

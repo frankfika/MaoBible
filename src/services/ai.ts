@@ -65,7 +65,7 @@ export async function callProvider(
   const config = await getAIConfig();
   if (!isConfigValid(config)) {
     return {
-      text: '尚未配置 AI 接入。请到「我 → AI 配置」添加 provider 和 API key 后再使用回应/问功能。原文阅读、收藏和阅读进度不依赖 AI, 可直接使用。',
+      text: '未配置 AI — 只能给本地简易提示。',
       isFallback: true,
       reason: 'no-config',
     };
@@ -132,19 +132,80 @@ function offlineHint(status: number, message: string, isConfigError: boolean): s
 
 /** Ask AI a question, RAG-style over 22 articles. */
 export async function askAI(question: string): Promise<AIResult> {
+  // No AI configured? Use a local manifest lookup so the user still gets
+  // useful pointers to relevant articles instead of a dead-end error.
+  const config = await getAIConfig();
+  if (!isConfigValid(config)) {
+    return localAskAnswer(question);
+  }
   return callProvider(
     SYSTEM_BRAIN,
     `问: ${question}\n\n请基于参考文章库回答。如果问题跟毛选无关, 也尽量联系到毛选思想给个简短回答。`,
   );
 }
 
+/**
+ * Local "ask" answer — picks 1-2 most relevant articles from the
+ * manifest by topic/keyword overlap. Returns their title + a one-line
+ * interpretation so the user gets a useful response even without AI.
+ */
+function localAskAnswer(question: string): AIResult {
+  const matches = matchArticlesLocally(question).slice(0, 2);
+  if (matches.length === 0) {
+    return {
+      text: '本地没找到相关主题的文章。试试点书架, 或到「我 → AI 接入」配置 AI 后再问。',
+      isFallback: true,
+      reason: 'no-config',
+    };
+  }
+  const lines = matches.map(
+    (a) => `• 《${a.title}》(${a.writtenAt}) — ${a.interpretation ?? a.summary ?? '读这一篇了解更多'}`,
+  );
+  return {
+    text:
+      `未配置 AI — 这是本地主题索引的回答, 不是真正的 AI 回答。建议先读:\n\n${lines.join('\n\n')}\n\n要 AI 完整回答, 请到「我 → AI 接入」配置 provider 和 API key。`,
+    isFallback: true,
+    reason: 'no-config',
+  };
+}
+
 /** Explain a Chinese paragraph in modern Chinese. */
 export async function explainParagraph(text: string): Promise<AIResult> {
+  // No AI configured? Give a useful local snippet instead of a "not
+  // configured" error. The user opens a paragraph expecting *some* kind
+  // of plain-language hint — show the first clause of the original +
+  // an explicit "go configure AI for a real explanation" CTA so the
+  // empty-state isn't a dead end.
+  const config = await getAIConfig();
+  if (!isConfigValid(config)) {
+    return localParagraphHint(text);
+  }
   const system = `你是毛选 AI 助手。把用户给的古文/文言段落用现代白话重新解释, 让现代读者能立刻看懂。150 字以内, 保留原文核心意思, 不要展开。不要使用 markdown 格式 (不要 **加粗**, 不要 # 标题, 直接用中文段落)。`;
   return callProvider(
     `原文:\n${text}\n\n请用现代白话解释这段话。`,
     system,
   );
+}
+
+/**
+ * Build a useful local hint for a Chinese paragraph when no AI is
+ * configured. Splits at the first Chinese comma/period and surfaces the
+ * opening clause as a plain-language teaser, plus an explicit CTA.
+ */
+function localParagraphHint(text: string): AIResult {
+  const trimmed = text.trim();
+  // Try to split at first 句号 / 逗号 / 分号 / 冒号 — show that opening
+  // clause as a short paraphrase-style teaser.
+  const splitRe = /[，。；：]/;
+  const firstClause = trimmed.split(splitRe)[0]?.trim() ?? trimmed;
+  const teaser = firstClause.length > 0 && firstClause.length < trimmed.length
+    ? `本段大意: ${firstClause}…`
+    : `本段开头: ${firstClause.slice(0, 24)}…`;
+  return {
+    text: `${teaser}\n\n(未配置 AI — 这是本地简易提示, 不是真正的白话翻译。要看完整现代白话, 请到「我 → AI 接入」配置 provider 和 API key。)`,
+    isFallback: true,
+    reason: 'no-config',
+  };
 }
 
 /** Summarize an article by id in one paragraph. */
