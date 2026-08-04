@@ -3,7 +3,7 @@
 > 一处安静、可信的多语言毛泽东著作阅读与思想研习空间。
 > A quiet, multi-language reader for Selected Works of Mao Zedong.
 
-A mobile-first PWA that lets you read 22 articles from the official 1991 People's Publishing House edition of *Selected Works of Mao Zedong* (《毛泽东选集》), with English translation drafts and a built-in AI assistant for plain-language interpretation.
+A mobile-first PWA with 22 articles transcribed from the 1991 People's Publishing House edition of *Selected Works of Mao Zedong* (《毛泽东选集》), English working drafts, and a built-in reading assistant for plain-language interpretation.
 
 ## Features
 
@@ -22,7 +22,7 @@ A mobile-first PWA that lets you read 22 articles from the official 1991 People'
 
 - React 18 + TypeScript + Vite 5
 - Tailwind 3 with `Paper / Ink / Moss / Cinnabar` palette
-- react-router-dom 6
+- react-router-dom 7
 - react-i18next 15 (UI strings)
 - idb-keyval for bookmarks / progress / reading sessions
 - framer-motion for transitions
@@ -32,7 +32,7 @@ A mobile-first PWA that lets you read 22 articles from the official 1991 People'
 ## Content
 
 - 22 articles covering 1925–1949
-- Chinese text: **official 人民出版社 1991 年第 2 版**, sourced from [M0rtzz/Selected-Works-of-MaoTseTung](https://github.com/M0rtzz/Selected-Works-of-MaoTseTung) (public domain in CN)
+- Chinese text: transcribed from 人民出版社 1991 年第 2 版 via [M0rtzz/Selected-Works-of-MaoTseTung](https://github.com/M0rtzz/Selected-Works-of-MaoTseTung). Public distribution requires a separate rights review.
 - English: LLM translation drafts (M2.7-highspeed) — not the Foreign Languages Press edition (which remains under US copyright until 2049)
 - Stable paragraph IDs (`hunan-001`, `op-005`, ...) so bilingual mode aligns by content, not by line number
 - Long articles have explicit section headings (`kind: "heading"`)
@@ -46,6 +46,21 @@ pnpm build        # tsc -b + vite build → dist/
 pnpm preview      # serve built dist/ on :4173
 pnpm typecheck    # tsc -b --noEmit
 ```
+
+## Native mobile apps
+
+The same React app is packaged for iOS and Android with Capacitor. Native builds use the bundle ID `com.frankfika.maobible` and display name `毛选`.
+
+```bash
+pnpm mobile:sync     # build web assets and sync both native projects
+pnpm mobile:android  # open the Android project
+pnpm mobile:android:bundle # build a signed Google Play AAB (requires local signing config)
+pnpm mobile:ios      # open the iOS project
+```
+
+Android requires JDK 21 and Android SDK 36. iOS requires a current full Xcode installation and an Apple Developer signing team. Store release signing credentials are intentionally not committed to the repository.
+
+See [`docs/store-release-checklist.md`](docs/store-release-checklist.md) for the release gates and [`docs/store-listing-zh-CN.md`](docs/store-listing-zh-CN.md) for the draft store listing.
 
 The AI backend (`POST /api/ai`) requires the `mmx` CLI on PATH (it shells out to `mmx text chat`). In production you'd replace the Vite middleware in `vite.config.ts` with a real server.
 
@@ -106,7 +121,7 @@ MaoBible/
 - All content: status `published`, source 人民出版社 1991
 - 44px touch targets, `px-4` mobile, `safe-area-inset-bottom`
 
-## Copyright
+## Rights status
 
-- **Chinese**: 人民出版社 1991 第 2 版《毛泽东选集》— public domain in mainland China
-- **English**: LLM translation draft from the public-domain Chinese source. NOT the Foreign Languages Press official version (which remains under US copyright until 2049).
+- **Chinese**: transcribed from 人民出版社 1991 第 2 版《毛泽东选集》. Do not treat online availability as a license; confirm authorization before public distribution.
+- **English**: the repository currently mixes draft translations and text derived from Foreign Languages Press editions. It is not cleared for public distribution and requires both content QA and a jurisdiction-specific rights review.

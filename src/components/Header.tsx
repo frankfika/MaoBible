@@ -11,7 +11,7 @@ export function Header() {
       <div className="max-w-3xl mx-auto px-4 sm:px-8 h-12 flex items-center justify-between">
         <Link
           to="/"
-          className="group inline-flex items-center gap-2 font-serif-cn text-[15px] font-medium
+          className="group inline-flex min-h-[44px] items-center gap-2 font-serif-cn text-[15px] font-medium
                      text-ink dark:text-dark-ink touch-manipulation"
           aria-label="毛选 · 返回书架"
         >

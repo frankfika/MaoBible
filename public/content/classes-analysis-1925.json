@@ -17,13 +17,13 @@
     "reflectionPrompt": "面对一个组织里的分歧,你会先分析各方的真实处境和利益,还是先站队?",
     "paragraphCount": 10,
     "source": "《毛泽东选集》（人民出版社 1991 年第 2 版）",
-    "licenseNote": "原文来自公开的人民出版社 1991 年版《毛泽东选集》，属于官方公开内容"
+    "licenseNote": "版本来源：人民出版社 1991 年版《毛泽东选集》。权利状态待核验；公开发布前需获得必要授权。"
   },
   "translations": {
     "zh-CN": {
       "language": "zh-CN",
       "source": "《毛泽东选集》（人民出版社 1991 年第 2 版）",
-      "licenseNote": "原文来自公开的人民出版社 1991 年版《毛泽东选集》，属于官方公开内容",
+      "licenseNote": "版本来源：人民出版社 1991 年版《毛泽东选集》。权利状态待核验；公开发布前需获得必要授权。",
       "updatedAt": "2026-07-28",
       "status": "published",
       "paragraphs": [
@@ -73,7 +73,7 @@
       "language": "en",
       "translator": "Foreign Languages Press (early translation, 1950s)",
       "source": "Analysis of the Classes in Chinese Society, Selected Works of Mao Tse-tung, Vol. 1, FLP, 1954",
-      "licenseNote": "Based on the standard FLP English translation; the 1954 publication is in the public domain in most jurisdictions.",
+      "licenseNote": "Based on the Foreign Languages Press English translation. Rights status has not been cleared for public distribution.",
       "updatedAt": "2026-07-28",
       "status": "published",
       "paragraphs": [

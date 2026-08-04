@@ -22,7 +22,7 @@ export function ThemeToggle() {
       aria-label={`${t('nav.theme')}: ${label}`}
       title={`${t('nav.theme')}: ${label}`}
       onClick={() => setMode(next)}
-      className="rounded-card px-3 py-1.5 text-sm border border-ink/10 dark:border-dark-line
+      className="min-h-[44px] min-w-[44px] rounded-card px-3 py-1.5 text-sm border border-ink/10 dark:border-dark-line
                  bg-white/40 dark:bg-dark-ink/5 hover:bg-ink/5 dark:hover:bg-dark-ink/10
                  transition-colors duration-180"
     >
